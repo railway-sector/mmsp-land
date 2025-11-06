@@ -45,6 +45,7 @@ function MapDisplay() {
       arcgisMap.map.add(alignmentLine);
       arcgisMap.map.add(accessRoadOptionsGroupLayer);
       arcgisMap.map.ground.navigationConstraint = "none";
+      arcgisMap.view.ui.components = [];
 
       arcgisSearch.sources = [
         {
@@ -84,14 +85,14 @@ function MapDisplay() {
         setMapView(event.target);
       }}
     >
-      <arcgis-compass position="top-right"></arcgis-compass>
-      <arcgis-expand close-on-esc position="top-right" mode="floating">
+      <arcgis-compass slot="top-right"></arcgis-compass>
+      <arcgis-expand close-on-esc slot="top-right" mode="floating">
         <arcgis-search></arcgis-search>
         {/* <arcgis-placement>
           <calcite-button>Placeholder</calcite-button>
         </arcgis-placement> */}
       </arcgis-expand>
-      <arcgis-zoom position="bottom-right"></arcgis-zoom>
+      <arcgis-zoom slot="bottom-right"></arcgis-zoom>
     </arcgis-map>
   );
 }
