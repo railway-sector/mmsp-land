@@ -87,7 +87,7 @@ export default function MapDisplay() {
           <arcgis-search></arcgis-search>
         </arcgis-expand>
         <arcgis-zoom slot="bottom-right"></arcgis-zoom>
-        <arcgis-locate slot="top-right"></arcgis-locate>
+        {/* <arcgis-locate slot="top-right"></arcgis-locate> */}
       </arcgis-map>
     </>
   );
