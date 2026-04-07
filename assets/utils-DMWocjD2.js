@@ -1,1 +1,0 @@
-import{an as i}from"./index-TicHyDQ6.js";import{I as n}from"./applyEditsUtils-Cc9ws1c1.js";function u(t){return t.map(e=>{const r=e.editedFeatures,a=i.fromJSON(r?.spatialReference);return r?{layerId:e.id,editedFeatures:n(r,a)}:null}).filter(e=>e!==null)}export{u as t};
