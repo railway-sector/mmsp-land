@@ -1,3 +1,5 @@
+export type statisticsType = "count" | "sum";
+
 // Value and Label color
 // Chart and chart label color
 export const primaryLabelColor = "#d1d5db";

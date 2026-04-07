@@ -12,7 +12,7 @@ import "@esri/calcite-components/components/calcite-action-bar";
 import { lotIssueListField } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
-import { queryStatisticsLayer } from "../Query";
+import { queryExpression } from "../Query";
 
 // Zoom in to selected lot from expropriation list
 let highlightSelect: any;
@@ -49,7 +49,7 @@ const LotIssueList = () => {
     // Reset the list
     const query = lotLayer.createQuery();
     const qExpro = `${lotIssueListField} IS NOT NULL`;
-    query.where = queryStatisticsLayer({
+    query.where = queryExpression({
       contractcp: contractp,
       landtype: landtype,
       landsection: landsection,

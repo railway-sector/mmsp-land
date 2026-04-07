@@ -8,7 +8,8 @@ import {
   chartRenderer,
   generateIsfData,
   generateIsfNumber,
-  queryLayersExpression,
+  queryDefinitionExpression,
+  queryExpression,
   thousands_separators,
   zoomToLayer,
 } from "../Query";
@@ -63,16 +64,18 @@ const IsfChart = memo(() => {
       },
     },
   ]);
-  const [isfNumber, setIsfNumber] = useState();
+  const [isfNumber, setIsfNumber] = useState<number>(0);
 
   const chartID = "isf-pie";
 
   useEffect(() => {
-    queryLayersExpression({
-      contractcp: contractp,
-      landtype: landtype,
-      landsection: landsection,
-      arcgisMap: arcgisMap,
+    queryDefinitionExpression({
+      queryExpression: queryExpression({
+        contractcp: contractp,
+        landtype: landtype,
+        landsection: landsection,
+      }),
+      featureLayer: [isfLayer],
     });
 
     generateIsfData(contractp, landtype, landsection).then((result: any) => {

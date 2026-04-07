@@ -97,7 +97,7 @@ function MainChart() {
             <IsfChart />
           </calcite-tab>
 
-          {/* CalciteTab: List of Lots under Expropriation */}
+          {/* CalciteTab: List of Lodts under Expropriation */}
           <calcite-tab>
             <ExpropriationList />
           </calcite-tab>

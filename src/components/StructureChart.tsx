@@ -8,18 +8,22 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   chartRenderer,
-  generateStrucNumber,
-  generateStructureData,
-  queryLayersExpression,
+  pieChartStatusData,
+  queryDefinitionExpression,
+  queryExpression,
   thousands_separators,
+  totalFieldCount,
   zoomToLayer,
 } from "../Query";
 
 import {
   colorStructureHex,
   primaryLabelColor,
+  statusStructure,
   statusStructureField,
   statusStructureQuery,
+  structureIdField,
+  structureRemarksField,
   valueLabelColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
@@ -110,33 +114,81 @@ const StructureChart = memo(() => {
       value: Number,
     },
   ]);
+  const [structureNumber, setStructureNumber] = useState<number>(0);
+  const [strucDemolishedNumber, setStrucDemolishedNumber] = useState<number>(0);
+  const [strucNumberForDemolition, setStrucNumberForDemolition] =
+    useState<number>(0);
+  const [percentDemolished, setPercentDemolished] = useState<number>(0);
 
   const chartID = "structure-chart";
-  const [structureNumber, setStructureNumber] = useState([]);
 
   useEffect(() => {
-    queryLayersExpression({
+    queryDefinitionExpression({
+      queryExpression: queryExpression({
+        contractcp: contractp,
+        landtype: landtype,
+        landsection: landsection,
+      }),
+      featureLayer: [structureLayer],
+    });
+
+    //--- chart data
+    pieChartStatusData({
       contractcp: contractp,
       landtype: landtype,
       landsection: landsection,
-      arcgisMap: arcgisMap,
+      layer: structureLayer,
+      statusList: statusStructure,
+      statusColor: colorStructureHex,
+      statusField: statusStructureField,
+      statisticType: "count",
+    }).then((result: any) => {
+      setStructureData(result[0]);
     });
 
-    generateStructureData(contractp, landtype, landsection).then(
-      (result: any) => {
-        setStructureData(result);
-      },
-    );
+    //--- total number of structure
+    totalFieldCount({
+      contractcp: contractp,
+      landtype: landtype,
+      landsection: landsection,
+      layer: structureLayer,
+      idField: structureIdField,
+    }).then((result: any) => {
+      setStructureNumber(result);
+    });
 
-    // Structure Number
-    generateStrucNumber(contractp, landtype, landsection).then(
-      (response: any) => {
-        setStructureNumber(response);
-      },
-    );
+    //--- numbe of demolished structures
+    totalFieldCount({
+      contractcp: contractp,
+      landtype: landtype,
+      landsection: landsection,
+      layer: structureLayer,
+      idField: structureRemarksField,
+      queryField: `${structureRemarksField} = 'Demolished'`,
+    }).then((result: any) => {
+      setStrucDemolishedNumber(result);
+    });
+
+    //--- number of structures subject to demolition
+    totalFieldCount({
+      contractcp: contractp,
+      landtype: landtype,
+      landsection: landsection,
+      layer: structureLayer,
+      idField: structureRemarksField,
+      queryField: `${structureRemarksField} IS NOT NULL`,
+    }).then((result: any) => {
+      setStrucNumberForDemolition(result);
+    });
 
     zoomToLayer(structureLayer, arcgisMap);
   }, [contractp, landtype, landsection]);
+
+  useEffect(() => {
+    setPercentDemolished(
+      Math.round((strucDemolishedNumber / strucNumberForDemolition) * 100),
+    );
+  }, [structureNumber, strucDemolishedNumber, strucNumberForDemolition]);
 
   useEffect(() => {
     maybeDisposeRoot(chartID);
@@ -244,7 +296,7 @@ const StructureChart = memo(() => {
               margin: "auto",
             }}
           >
-            {thousands_separators(structureNumber[2])}
+            {thousands_separators(structureNumber)}
           </dd>
         </dl>
       </div>
@@ -284,7 +336,7 @@ const StructureChart = memo(() => {
               margin: "auto",
             }}
           >
-            {structureNumber[0]}% ({thousands_separators(structureNumber[1])})
+            {percentDemolished}% ({thousands_separators(strucDemolishedNumber)})
           </dd>
         </dl>
       </div>

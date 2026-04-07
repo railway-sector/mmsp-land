@@ -1,66 +1,45 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import {
-  dateTable,
-  handedOverLotLayer,
-  isfLayer,
-  lotLayer,
-  publicLotLayer,
-  structureLayer,
-  tobeHandedOverLotLayer,
-} from "./layers";
+import { dateTable, isfLayer, lotLayer, structureLayer } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import * as am5 from "@amcharts/amcharts5";
 import {
-  statusLotLabel,
   statusIsf,
   statusStructure,
-  lotStatusField,
-  statusLotQuery,
   statusStructureField,
   statusIsfQuery,
   statusIsfField,
   cpField,
-  handedOverField,
   station1Field,
   lotTypeField,
-  lot_id_field,
   structureIdField,
   structureRemarksField,
-  tobeHandedOverField,
 } from "./uniqueValues";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Query from "@arcgis/core/rest/support/Query";
+import type { statisticsType } from "./uniqueValues";
 
 // ****************************
 //    Chart Parameters
 // ****************************
-export const highlightSelectedUtil = (
-  featureLayer: any,
-  qExpression: any,
-  view: any,
-) => {
-  const query = featureLayer.createQuery();
+type layerViewQueryProps = {
+  layer?: any;
+  qExpression?: any;
+  view: any;
+};
+
+export const highlightFilterLayerView = ({
+  layer,
+  qExpression,
+  view,
+}: layerViewQueryProps) => {
+  const query = layer.createQuery();
   query.where = qExpression;
   let highlightSelect: any;
 
-  view?.whenLayerView(featureLayer).then((layerView: any) => {
-    featureLayer?.queryObjectIds(query).then((results: any) => {
+  view?.whenLayerView(layer).then((layerView: any) => {
+    layer?.queryObjectIds(query).then((results: any) => {
       const objID = results;
-
-      const queryExt = new Query({
-        objectIds: objID,
-      });
-
-      try {
-        featureLayer?.queryExtent(queryExt).then((result: any) => {
-          if (result?.extent) {
-            view?.goTo(result.extent);
-          }
-        });
-      } catch (error) {
-        console.error("Error querying extent for point layer:", error);
-      }
 
       highlightSelect && highlightSelect.remove();
       highlightSelect = layerView.highlight(objID);
@@ -78,24 +57,6 @@ export const highlightSelectedUtil = (
       highlightSelect && highlightSelect.remove();
     });
   });
-};
-
-type layerViewQueryProps = {
-  pointLayer1?: FeatureLayer;
-  pointLayer2?: FeatureLayer;
-  lineLayer1?: FeatureLayer;
-  lineLayer2?: FeatureLayer;
-  polygonLayer?: FeatureLayer;
-  qExpression?: any;
-  view: any;
-};
-
-export const polygonViewQueryFeatureHighlight = ({
-  polygonLayer,
-  qExpression,
-  view,
-}: layerViewQueryProps) => {
-  highlightSelectedUtil(polygonLayer, qExpression, view);
 };
 
 // Dynamic chart size
@@ -221,15 +182,15 @@ export function chartRenderer({
     const statusSelected = find?.value;
 
     const queryField = `${status_field} = ${statusSelected}`;
-    const qExpression = queryStatisticsLayer({
+    const qExpression = queryExpression({
       contractcp: contractcp,
       landtype: landtype,
       landsection: landsection,
       queryField: queryField,
     });
 
-    polygonViewQueryFeatureHighlight({
-      polygonLayer: layer,
+    highlightFilterLayerView({
+      layer: layer,
       qExpression: qExpression,
       view: arcgisMap?.view,
     });
@@ -300,111 +261,224 @@ export function chartRenderer({
 // ****************************
 //    Dropdown Parameters
 // ****************************
-
-// Query function for lotLayer
-export const queryDropdownTypes = (
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) => {
-  const qCP = `${cpField} = '` + contractcp + "'";
-  const qLandType = `${lotTypeField} = '` + landtype + "'";
-  const qCpLandType = qCP + " AND " + qLandType;
-  const qLandSection = `${station1Field} = '` + landsection + "'";
-  const qCpLandTypeSection = qCpLandType + " AND " + qLandSection;
-
-  return [qCP, qCpLandType, qCpLandTypeSection];
-};
-
-interface queryLayerExpressionType {
+interface queryExpressionType {
   contractcp: string;
   landtype: string;
   landsection: string;
-  arcgisMap?: any;
-  timesliderstate?: boolean;
+  queryField?: any;
 }
-
-export function queryLayersExpression({
-  contractcp,
-  landtype,
-  landsection,
-}: queryLayerExpressionType) {
-  const typeExpression = queryDropdownTypes(contractcp, landtype, landsection);
-
-  if (!contractcp) {
-    lotLayer.definitionExpression = "1=1";
-    handedOverLotLayer.definitionExpression = "1=1";
-    publicLotLayer.definitionExpression = "1=1";
-    structureLayer.definitionExpression = "1=1";
-    isfLayer.definitionExpression = "1=1";
-    tobeHandedOverLotLayer.definitionExpression = "1=1";
-    // pteLotSubteLayer1.definitionExpression = '1=1';
-  } else if (contractcp && !landtype && !landsection) {
-    lotLayer.definitionExpression = typeExpression[0];
-    handedOverLotLayer.definitionExpression = typeExpression[0];
-    publicLotLayer.definitionExpression = typeExpression[0];
-    structureLayer.definitionExpression = typeExpression[0];
-    isfLayer.definitionExpression = typeExpression[0]; // pteLotSubteLayer1.definitionExpression = qCP;
-    tobeHandedOverLotLayer.definitionExpression = typeExpression[0];
-  } else if (contractcp && landtype && !landsection) {
-    lotLayer.definitionExpression = typeExpression[1];
-    handedOverLotLayer.definitionExpression = typeExpression[1];
-    publicLotLayer.definitionExpression = typeExpression[1];
-    structureLayer.definitionExpression = typeExpression[1];
-    isfLayer.definitionExpression = typeExpression[1];
-    tobeHandedOverLotLayer.definitionExpression = typeExpression[1];
-    // pteLotSubteLayer1.definitionExpression = qCpLandType;
-  } else {
-    lotLayer.definitionExpression = typeExpression[2];
-    handedOverLotLayer.definitionExpression = typeExpression[2];
-    publicLotLayer.definitionExpression = typeExpression[2];
-    structureLayer.definitionExpression = typeExpression[2];
-    isfLayer.definitionExpression = typeExpression[2];
-    tobeHandedOverLotLayer.definitionExpression = typeExpression[2];
-    // pteLotSubteLayer1.definitionExpression = qCpLandTypeSection;
-  }
-}
-
-interface queryStatisticsType {
-  contractcp: any;
-  landtype: any;
-  landsection: any;
-  queryField: any;
-}
-
-export function queryStatisticsLayer({
+export function queryExpression({
   contractcp,
   landtype,
   landsection,
   queryField,
-}: queryStatisticsType) {
-  try {
-    const typeExpression = queryDropdownTypes(
-      contractcp,
-      landtype,
-      landsection,
-    );
-    let queryWhere: any;
-    if (!contractcp) {
-      queryWhere = !queryField ? "1=1" : queryField;
-    } else if (contractcp && !landtype && !landsection) {
-      queryWhere = !queryField
-        ? typeExpression[0]
-        : queryField + " AND " + typeExpression[0];
-    } else if (contractcp && landtype && !landsection) {
-      queryWhere = !queryField
-        ? typeExpression[1]
-        : queryField + " AND " + typeExpression[1];
-    } else {
-      queryWhere = !queryField
-        ? typeExpression[2]
-        : queryField + " AND " + typeExpression[2];
-    }
+}: queryExpressionType) {
+  const qCp = `${cpField} = '${contractcp}'`;
+  const qLandType = `${lotTypeField} = '${landtype}'`;
+  const qCpLandType = `${qCp} AND ${qLandType}`;
+  const qLandSection = `${station1Field} = '${landsection}'`;
+  const qCpLandTypeSection = `${qCpLandType} AND ${qLandSection}`;
 
-    return queryWhere;
-  } catch (error) {
-    console.error("Error fetching data from FeatureServer:", error);
+  let expression = "";
+  if (!contractcp) {
+    expression = !queryField ? "1=1" : queryField;
+  } else if (contractcp && !landtype && !landsection) {
+    expression = !queryField ? qCp : `${qCp} AND ${queryField}`;
+  } else if (contractcp && landtype && !landsection) {
+    expression = !queryField ? qCpLandType : `${qCpLandType} AND ${queryField}`;
+  } else {
+    expression = !queryField
+      ? qCpLandTypeSection
+      : `${qCpLandTypeSection} AND ${queryField}`;
   }
+
+  return expression;
+}
+
+interface queryDefinitionExpressionType {
+  queryExpression?: string;
+  featureLayer?:
+    | [FeatureLayer, FeatureLayer?, FeatureLayer?, FeatureLayer?, FeatureLayer?]
+    | any;
+  arcgisScene?: any;
+  timesliderstate?: boolean;
+}
+
+export function queryDefinitionExpression({
+  queryExpression,
+  featureLayer,
+  timesliderstate,
+  arcgisScene,
+}: queryDefinitionExpressionType) {
+  if (queryExpression) {
+    if (featureLayer) {
+      if (Array.isArray(featureLayer)) {
+        featureLayer.forEach((layer) => {
+          if (layer) {
+            layer.definitionExpression = queryExpression;
+          }
+        });
+      } else {
+        featureLayer.definitionExpression = queryExpression;
+      }
+    }
+  }
+
+  if (!timesliderstate) {
+    zoomToLayer(lotLayer, arcgisScene);
+    zoomToLayer(structureLayer, arcgisScene);
+  }
+}
+
+//---------------------------------------------//
+//           Pie Chart Data Generation         //
+//---------------------------------------------//
+
+interface pieChartStatusDataType {
+  contractcp: string;
+  landtype: string;
+  landsection: string;
+  layer: any;
+  statusList?: any;
+  statusColor?: any;
+  statusField?: any;
+  idField?: any;
+  valueSumField?: any;
+  queryField?: any;
+  statisticType?: statisticsType;
+}
+export async function pieChartStatusData({
+  contractcp,
+  landtype,
+  landsection,
+  layer,
+  statusList,
+  statusColor,
+  statusField,
+  valueSumField,
+  queryField,
+  statisticType,
+}: pieChartStatusDataType) {
+  //--- Main statistics
+  let statsCollect: any;
+  if (statisticType === "count") {
+    statsCollect = new StatisticDefinition({
+      onStatisticField: statusField,
+      outStatisticFieldName: "statsCollect",
+      statisticType: statisticType,
+    });
+  } else if (statisticType === "sum") {
+    statsCollect = new StatisticDefinition({
+      onStatisticField: valueSumField,
+      outStatisticFieldName: "statsCollect",
+      statisticType: statisticType,
+    });
+  }
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+
+  const expression = queryExpression({
+    contractcp: contractcp,
+    landtype: landtype,
+    landsection: landsection,
+    queryField: queryField,
+  });
+
+  query.where = expression;
+  queryDefinitionExpression({
+    queryExpression: expression,
+    featureLayer: [layer],
+  });
+  query.orderByFields = [statusField];
+  query.groupByFieldsForStatistics = [statusField];
+
+  //--- Query features using statistics definitions
+  let total_count = 0;
+  return layer?.queryFeatures(query).then(async (response: any) => {
+    const stats = response.features;
+    const data = stats.map((result: any) => {
+      const attributes = result.attributes;
+      total_count += attributes.statsCollect;
+      return Object.assign({
+        category: statusList[attributes[statusField] - 1],
+        value: attributes.statsCollect,
+      });
+    });
+
+    //--- Account for zero count
+    const data0 = statusList.map((status: any, index: any) => {
+      const find = data.find((emp: any) => emp.category === status);
+      const value = find === undefined ? 0 : find?.value;
+      return Object.assign({
+        category: status,
+        value: value,
+        sliceSettings: {
+          fill: am5.color(statusColor[index]),
+        },
+      });
+    });
+    return [data0, total_count];
+  });
+}
+
+export async function totalFieldCount({
+  contractcp,
+  landtype,
+  landsection,
+  layer,
+  idField,
+  queryField,
+}: pieChartStatusDataType) {
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: idField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: "count",
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+  query.where = queryExpression({
+    contractcp: contractcp,
+    landtype: landtype,
+    landsection: landsection,
+    queryField: queryField,
+  });
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
+}
+
+export async function totalFieldSum({
+  contractcp,
+  landtype,
+  landsection,
+  layer,
+  valueSumField,
+  queryField,
+}: pieChartStatusDataType) {
+  const statsCollect = new StatisticDefinition({
+    onStatisticField: valueSumField,
+    outStatisticFieldName: "statsCollect",
+    statisticType: "sum",
+  });
+
+  //--- Query
+  const query = new Query();
+  query.outStatistics = [statsCollect];
+  query.where = queryExpression({
+    contractcp: contractcp,
+    landtype: landtype,
+    landsection: landsection,
+    queryField: queryField,
+  });
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
 }
 
 // Updat date
@@ -443,168 +517,6 @@ export async function dateUpdate() {
   });
 }
 
-// Lot
-export async function generateLotData(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: lotStatusField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outFields = [lotStatusField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [lotStatusField];
-  query.groupByFieldsForStatistics = [lotStatusField];
-  query.where = queryStatisticsLayer({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes.StatusNVS3;
-      const count = attributes.total_count;
-      return Object.assign({
-        category: statusLotLabel[status_id - 1],
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    statusLotLabel.map((status: any, index: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-        sliceSettings: {
-          fill: am5.color(statusLotQuery[index].color),
-        },
-      };
-      data1.push(object);
-    });
-    return data1;
-  });
-}
-
-export async function generateLotNumber(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_lot_number = new StatisticDefinition({
-    onStatisticField: lot_id_field,
-    outStatisticFieldName: "total_lot_number",
-    statisticType: "count",
-  });
-
-  const ononStatisticFieldValue =
-    "CASE WHEN " + lotStatusField + " >=1 THEN 1 ELSE 0 END";
-  const total_lot_pie = new StatisticDefinition({
-    onStatisticField: ononStatisticFieldValue,
-    outStatisticFieldName: "total_lot_pie",
-    statisticType: "sum",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outStatistics = [total_lot_number, total_lot_pie];
-  query.where = queryStatisticsLayer({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const totalLotNumber = stats.total_lot_number;
-    const totalPrivate = stats.total_lot_pie;
-    const totalPublic = totalLotNumber - totalPrivate;
-    return [totalLotNumber, totalPrivate, totalPublic];
-  });
-}
-
-// Handed Over Lots (Count)
-export async function generateHandedOver(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_handedover_lot = new StatisticDefinition({
-    onStatisticField: `CASE WHEN ${handedOverField} = 1 THEN 1 ELSE 0 END`,
-    outStatisticFieldName: "total_handedover_lot",
-    statisticType: "sum",
-  });
-
-  const total_lot_N = new StatisticDefinition({
-    onStatisticField: lot_id_field,
-    outStatisticFieldName: "total_lot_N",
-    statisticType: "count",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outStatistics = [total_handedover_lot, total_lot_N];
-  query.where = queryStatisticsLayer({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const handedover = stats.total_handedover_lot;
-    const totaln = stats.total_lot_N;
-    const percent = ((handedover / totaln) * 100).toFixed(0);
-    return [percent, handedover];
-  });
-}
-
-// To be Handed Over (Count)
-export async function generateToBeHandedOver(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_handedover_lot = new StatisticDefinition({
-    onStatisticField: `CASE WHEN ${tobeHandedOverField} = 1 THEN 1 ELSE 0 END`,
-    outStatisticFieldName: "total_handedover_lot",
-    statisticType: "sum",
-  });
-
-  const total_lot_N = new StatisticDefinition({
-    onStatisticField: lot_id_field,
-    outStatisticFieldName: "total_lot_N",
-    statisticType: "count",
-  });
-
-  const query = lotLayer.createQuery();
-  query.outStatistics = [total_handedover_lot, total_lot_N];
-  query.where = queryStatisticsLayer({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return lotLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const tobehandedover = stats.total_handedover_lot;
-    const totaln = stats.total_lot_N;
-    const percent = ((tobehandedover / totaln) * 100).toFixed(0);
-    return [percent, tobehandedover];
-  });
-}
-
 // Structure
 export async function generateStructureData(
   contractcp: any,
@@ -622,7 +534,7 @@ export async function generateStructureData(
   query.outStatistics = [total_count];
   query.orderByFields = [statusStructureField];
   query.groupByFieldsForStatistics = [statusStructureField];
-  query.where = queryStatisticsLayer({
+  query.where = queryExpression({
     contractcp: contractcp,
     landtype: landtype,
     landsection: landsection,
@@ -693,7 +605,7 @@ export async function generateStrucNumber(
     total_struc_N,
     total_pie_structure,
   ];
-  query.where = queryStatisticsLayer({
+  query.where = queryExpression({
     contractcp: contractcp,
     landtype: landtype,
     landsection: landsection,
@@ -729,7 +641,7 @@ export async function generateIsfData(
   query.outStatistics = [total_count];
   query.orderByFields = [statusIsfField];
   query.groupByFieldsForStatistics = [statusIsfField];
-  query.where = queryStatisticsLayer({
+  query.where = queryExpression({
     contractcp: contractcp,
     landtype: landtype,
     landsection: landsection,
@@ -778,7 +690,7 @@ export async function generateIsfNumber(
 
   const query = isfLayer.createQuery();
   query.outStatistics = [total_isf];
-  query.where = queryStatisticsLayer({
+  query.where = queryExpression({
     contractcp: contractcp,
     landtype: landtype,
     landsection: landsection,
