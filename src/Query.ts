@@ -1,18 +1,14 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { dateTable, isfLayer, lotLayer, structureLayer } from "./layers";
+import { dateTable, isfLayer } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import * as am5 from "@amcharts/amcharts5";
 import {
   statusIsf,
-  statusStructure,
-  statusStructureField,
   statusIsfQuery,
   statusIsfField,
   cpField,
   station1Field,
   lotTypeField,
-  structureIdField,
-  structureRemarksField,
 } from "./uniqueValues";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
@@ -40,6 +36,15 @@ export const highlightFilterLayerView = ({
   view?.whenLayerView(layer).then((layerView: any) => {
     layer?.queryObjectIds(query).then((results: any) => {
       const objID = results;
+
+      const queryExt = new Query({
+        objectIds: objID,
+      });
+      layer?.queryExtent(queryExt).then((result: any) => {
+        if (result?.extent) {
+          view?.goTo(result.extent);
+        }
+      });
 
       highlightSelect && highlightSelect.remove();
       highlightSelect = layerView.highlight(objID);
@@ -307,8 +312,8 @@ interface queryDefinitionExpressionType {
 export function queryDefinitionExpression({
   queryExpression,
   featureLayer,
-  timesliderstate,
-  arcgisScene,
+  // timesliderstate,
+  // arcgisScene,
 }: queryDefinitionExpressionType) {
   if (queryExpression) {
     if (featureLayer) {
@@ -324,10 +329,10 @@ export function queryDefinitionExpression({
     }
   }
 
-  if (!timesliderstate) {
-    zoomToLayer(lotLayer, arcgisScene);
-    zoomToLayer(structureLayer, arcgisScene);
-  }
+  // if (!timesliderstate) {
+  //   zoomToLayer(lotLayer, arcgisScene);
+  //   zoomToLayer(structureLayer, arcgisScene);
+  // }
 }
 
 //---------------------------------------------//
@@ -514,114 +519,6 @@ export async function dateUpdate() {
       return final;
     });
     return dates;
-  });
-}
-
-// Structure
-export async function generateStructureData(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: statusStructureField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = structureLayer.createQuery();
-  query.outFields = [statusStructureField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [statusStructureField];
-  query.groupByFieldsForStatistics = [statusStructureField];
-  query.where = queryExpression({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return structureLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes.Status;
-      const count = attributes.total_count;
-      return Object.assign({
-        category: statusStructure[status_id - 1],
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    statusStructure.map((status: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-      };
-      data1.push(object);
-    });
-    return data1;
-  });
-}
-
-// Structure For Permit-to-Enter
-export async function generateStrucNumber(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_demolished_structure = new StatisticDefinition({
-    onStatisticField: `CASE WHEN ${structureRemarksField} = 'Demolished' THEN 1 ELSE 0 END`,
-    outStatisticFieldName: "total_demolished_structure",
-    statisticType: "sum",
-  });
-
-  const total_struc_forDemolished = new StatisticDefinition({
-    onStatisticField: `CASE WHEN ${structureRemarksField} IS NOT NULL THEN 1 ELSE 0 END`,
-    outStatisticFieldName: "total_struc_forDemolished",
-    statisticType: "sum",
-  });
-
-  const total_struc_N = new StatisticDefinition({
-    onStatisticField: structureIdField,
-    outStatisticFieldName: "total_struc_N",
-    statisticType: "count",
-  });
-
-  const total_pie_structure = new StatisticDefinition({
-    onStatisticField: `CASE WHEN ${statusStructureField} >= 1 THEN 1 ELSE 0 END`,
-    outStatisticFieldName: "total_pie_structure",
-    statisticType: "sum",
-  });
-
-  const query = structureLayer.createQuery();
-
-  query.outStatistics = [
-    total_demolished_structure,
-    total_struc_forDemolished,
-    total_struc_N,
-    total_pie_structure,
-  ];
-  query.where = queryExpression({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return structureLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const demolished = stats.total_demolished_structure;
-    const totalnDemolished = stats.total_struc_forDemolished;
-    const totaln = stats.total_struc_N;
-    const totalpie = stats.total_pie_structure;
-    const percDemolished = Number(
-      ((demolished / totalnDemolished) * 100).toFixed(0),
-    );
-    return [percDemolished, demolished, totaln, totalpie];
   });
 }
 
