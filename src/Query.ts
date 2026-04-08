@@ -1,15 +1,8 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { dateTable, isfLayer } from "./layers";
+import { dateTable } from "./layers";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import * as am5 from "@amcharts/amcharts5";
-import {
-  statusIsf,
-  statusIsfQuery,
-  statusIsfField,
-  cpField,
-  station1Field,
-  lotTypeField,
-} from "./uniqueValues";
+import { cpField, station1Field, lotTypeField } from "./uniqueValues";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Query from "@arcgis/core/rest/support/Query";
@@ -185,8 +178,12 @@ export function chartRenderer({
     const Category = Selected.category;
     const find = statusArray.find((emp: any) => emp.category === Category);
     const statusSelected = find?.value;
+    const isStringOrNumber = typeof statusSelected === "number";
 
-    const queryField = `${status_field} = ${statusSelected}`;
+    const queryField = isStringOrNumber
+      ? `${status_field} = ${statusSelected}`
+      : `${status_field} = '${statusSelected}'`;
+
     const qExpression = queryExpression({
       contractcp: contractcp,
       landtype: landtype,
@@ -406,8 +403,14 @@ export async function pieChartStatusData({
     const data = stats.map((result: any) => {
       const attributes = result.attributes;
       total_count += attributes.statsCollect;
+      const statusName = attributes[statusField];
+
+      //--- Check if attributes[statusField] is numeric or string
+      //--- This correctly accounts for a case where status in the attribute table is not number,
+      const isStringOrNumber = typeof statusName === "number";
+
       return Object.assign({
-        category: statusList[attributes[statusField] - 1],
+        category: isStringOrNumber ? statusList[statusName - 1] : statusName,
         value: attributes.statsCollect,
       });
     });
@@ -519,86 +522,6 @@ export async function dateUpdate() {
       return final;
     });
     return dates;
-  });
-}
-
-export async function generateIsfData(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_count = new StatisticDefinition({
-    onStatisticField: statusIsfField,
-    outStatisticFieldName: "total_count",
-    statisticType: "count",
-  });
-
-  const query = isfLayer.createQuery();
-  query.outFields = [statusIsfField];
-  query.outStatistics = [total_count];
-  query.orderByFields = [statusIsfField];
-  query.groupByFieldsForStatistics = [statusIsfField];
-  query.where = queryExpression({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return isfLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const data = stats.map((result: any) => {
-      const attributes = result.attributes;
-      const status_id = attributes.RELOCATION;
-      const count = attributes.total_count;
-      return Object.assign({
-        category: status_id,
-        value: count,
-      });
-    });
-
-    const data1: any = [];
-    statusIsf.map((status: any, index: any) => {
-      const find = data.find((emp: any) => emp.category === status);
-      const value = find === undefined ? 0 : find?.value;
-      const object = {
-        category: status,
-        value: value,
-        sliceSettings: {
-          fill: am5.color(statusIsfQuery[index].color),
-        },
-      };
-      data1.push(object);
-    });
-    return data1;
-  });
-}
-
-export async function generateIsfNumber(
-  contractcp: any,
-  landtype: any,
-  landsection: any,
-) {
-  const total_isf = new StatisticDefinition({
-    onStatisticField: statusIsfField,
-    outStatisticFieldName: "total_isf",
-    statisticType: "count",
-  });
-
-  const query = isfLayer.createQuery();
-  query.outStatistics = [total_isf];
-  query.where = queryExpression({
-    contractcp: contractcp,
-    landtype: landtype,
-    landsection: landsection,
-    queryField: undefined,
-  });
-
-  return isfLayer.queryFeatures(query).then((response: any) => {
-    const stats = response.features[0].attributes;
-    const totalisf = stats.total_isf;
-
-    return totalisf;
   });
 }
 

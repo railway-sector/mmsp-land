@@ -6,17 +6,19 @@ import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
 import {
   chartRenderer,
-  generateIsfData,
-  generateIsfNumber,
+  pieChartStatusData,
   queryDefinitionExpression,
   queryExpression,
   thousands_separators,
+  totalFieldCount,
   zoomToLayer,
 } from "../Query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
+  colorIsf,
   primaryLabelColor,
+  statusIsf,
   statusIsfField,
   statusIsfQuery,
   valueLabelColor,
@@ -30,8 +32,6 @@ function maybeDisposeRoot(divId: any) {
     }
   });
 }
-
-///*** Others */
 
 /// Draw chart
 const IsfChart = memo(() => {
@@ -55,7 +55,7 @@ const IsfChart = memo(() => {
   const pieSeriesRef = useRef<unknown | any | undefined>({});
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [isfData, SetIsfData] = useState([
+  const [isfData, setIsfData] = useState([
     {
       category: String,
       value: Number,
@@ -78,16 +78,29 @@ const IsfChart = memo(() => {
       featureLayer: [isfLayer],
     });
 
-    generateIsfData(contractp, landtype, landsection).then((result: any) => {
-      SetIsfData(result);
+    pieChartStatusData({
+      contractcp: contractp,
+      landtype: landtype,
+      landsection: landsection,
+      layer: isfLayer,
+      statusList: statusIsf,
+      statusColor: colorIsf,
+      statusField: statusIsfField,
+      statisticType: "count",
+    }).then((result: any) => {
+      setIsfData(result[0]);
     });
 
-    // ISF
-    generateIsfNumber(contractp, landtype, landsection).then(
-      (response: any) => {
-        setIsfNumber(response);
-      },
-    );
+    //--- total number of households
+    totalFieldCount({
+      contractcp: contractp,
+      landtype: landtype,
+      landsection: landsection,
+      layer: isfLayer,
+      idField: statusIsfField,
+    }).then((result: any) => {
+      setIsfNumber(result);
+    });
 
     zoomToLayer(isfLayer, arcgisMap);
   }, [contractp, landtype, landsection]);

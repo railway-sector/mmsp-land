@@ -23,15 +23,14 @@ import {
 } from "../layers";
 import type { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
-import { useState } from "react";
 
 export default function MapDisplay() {
-  const [mapView, setMapView] = useState();
+  // const [mapView, setMapView] = useState();
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
 
   arcgisMap?.viewOnReady(() => {
-    console.log(mapView);
+    // console.log(mapView);
     arcgisMap?.map?.add(lotGroupLayer);
     arcgisMap?.map?.add(depotBuildingsGroupLayer);
     arcgisMap?.map?.add(evsBoundaryPoGroupLayer);
@@ -78,9 +77,9 @@ export default function MapDisplay() {
         ground="world-elevation"
         center="121.0194387, 14.6972616"
         zoom={10}
-        onarcgisViewReadyChange={(event: any) => {
-          setMapView(event.target);
-        }}
+        // onarcgisViewReadyChange={(event: any) => {
+        //   setMapView(event.target);
+        // }}
       >
         <arcgis-compass slot="top-right"></arcgis-compass>
         <arcgis-expand close-on-esc slot="top-right" mode="floating">
