@@ -975,6 +975,42 @@ export const oas_accessRoad = new FeatureLayer({
   popupEnabled: false,
 });
 
+// OAS affected structure
+const oas_affecctedStructure_Renderer = new UniqueValueRenderer({
+  field: "REMARKS",
+  uniqueValueInfos: [
+    {
+      value: "Areas not yet Handed Over",
+      label: "Areas not yet Handed Over",
+      symbol: new SimpleFillSymbol({
+        style: "solid",
+        color: "white",
+        // outline: {
+        //   style: "long-dash",
+        //   width: 1,
+        //   color: "white",
+        // },
+      }),
+    },
+    {
+      value: "Handed Over Areas",
+      label: "Handed Over Areas",
+      symbol: new SimpleFillSymbol({
+        style: "solid",
+        color: "#FFE5B4",
+      }),
+    },
+    {
+      value: "Demolished",
+      label: "Demolished",
+      symbol: new SimpleFillSymbol({
+        style: "solid",
+        color: "gray",
+      }),
+    },
+  ],
+});
+
 const oas_affectedStructuresLabels = new LabelClass({
   symbol: new TextSymbol({
     color: "black",
@@ -990,6 +1026,8 @@ const oas_affectedStructuresLabels = new LabelClass({
     expression: "$feature.STRUCTURE_TAG_NO_",
   },
 });
+
+// Areas not yet Handed Over (White), Handed Over Areas (Peach),  and Demolished (Gray)
 export const oas_affectedStructures = new FeatureLayer({
   portalItem: {
     id: "437ae464f49544e080c9dda8f98a169d",
@@ -998,6 +1036,7 @@ export const oas_affectedStructures = new FeatureLayer({
   layerId: 28,
   title: "OAS Affected Structures",
   // outFields: ['*'],
+  renderer: oas_affecctedStructure_Renderer,
   popupEnabled: false,
   labelingInfo: [oas_affectedStructuresLabels],
 });
