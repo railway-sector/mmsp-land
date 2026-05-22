@@ -51,6 +51,12 @@ export function App(): React.JSX.Element {
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [backgroundcolorSwitch, setBackgroundcolorSwitch] =
     useState<boolean>(false);
+  const [asofdate, setAsofdate] = useState<any>();
+  const [latestasofdate, setLatestasofdate] = useState<any>();
+  const [statusdatefield, setStatusdatefield] = useState<any>();
+  const [datefields, setDatefields] = useState<any>();
+  const [newHandedoverJVfield, setNewHandedoverJVfield] = useState<any>();
+  const [newHandedoverNYfield, setNewHandedoverNYfield] = useState<any>();
 
   const updateContractcps = (newContractcp: any) => {
     setContractPackage(newContractcp);
@@ -62,6 +68,10 @@ export function App(): React.JSX.Element {
 
   const updateLandsection = (newPtLineType: any) => {
     setLandsection(newPtLineType);
+  };
+
+  const updateAsofdate = (newAsofdate: any) => {
+    setAsofdate(newAsofdate);
   };
 
   const updateStatusdate = (newStatusDate: any) => {
@@ -80,6 +90,26 @@ export function App(): React.JSX.Element {
     setBackgroundcolorSwitch(newColor);
   };
 
+  const updateLatestasofdate = (newLatestasofdate: any) => {
+    setLatestasofdate(newLatestasofdate);
+  };
+
+  const updateStatusdatefield = (newStatusdatefield: any) => {
+    setStatusdatefield(newStatusdatefield);
+  };
+
+  const updateDatefields = (newDatefields: any) => {
+    setDatefields(newDatefields);
+  };
+
+  const updateNewHandedoverJVfield = (newHandedoverJVfield: any) => {
+    setNewHandedoverJVfield(newHandedoverJVfield);
+  };
+
+  const updateNewHandedoverNYfield = (newHandedoverNYfield: any) => {
+    setNewHandedoverNYfield(newHandedoverNYfield);
+  };
+
   return (
     <>
       {loggedInState && (
@@ -95,13 +125,25 @@ export function App(): React.JSX.Element {
               timesliderstate,
               chartPanelwidth,
               backgroundcolorSwitch,
+              asofdate,
+              latestasofdate,
+              statusdatefield,
+              datefields,
+              newHandedoverJVfield,
+              newHandedoverNYfield,
               updateContractcps,
               updateLandtype,
               updateLandsection,
+              updateAsofdate,
+              updateLatestasofdate,
               updateStatusdate,
               updateTimesliderstate,
               updateChartPanelwidth,
               updateBackgroundcolorSwitch,
+              updateDatefields,
+              updateStatusdatefield,
+              updateNewHandedoverJVfield,
+              updateNewHandedoverNYfield,
             }}
           >
             <Header />

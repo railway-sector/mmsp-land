@@ -17,17 +17,73 @@ import {
   isfLayer,
   lotGroupLayer,
   lotLayer,
+  // lotLayerStatusRenderer,
   stationLayer,
   structureLayer,
   structuresGroupLayer,
 } from "../layers";
 import type { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
+import { use, useEffect } from "react";
+import { MyContext } from "../contexts/MyContext";
+import { dateUpdate } from "../Query";
 
 export default function MapDisplay() {
-  // const [mapView, setMapView] = useState();
+  const {
+    updateDatefields,
+    updateNewHandedoverJVfield,
+    updateNewHandedoverNYfield,
+    updateStatusdatefield,
+    updateAsofdate,
+    updateLatestasofdate,
+  } = use(MyContext);
+
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
+
+  useEffect(() => {
+    lotLayer.when(() => {
+      const all_fields: string[] = [];
+      lotLayer?.fields.map((field) => {
+        all_fields.push(field.name);
+      });
+
+      const temp = all_fields.filter((field: any) => field.startsWith("x"));
+      const date_fields = [...new Set(temp.map((item) => item.split("_")[0]))];
+
+      // Re-order date fields in ascending order
+      date_fields.sort((a: any, b: any) => {
+        const a_date: any = new Date(
+          Number(a.slice(1, 5)),
+          Number(a.slice(5, 7)) - 1,
+          Number(a.slice(7, 9)),
+        );
+        const b_date: any = new Date(
+          Number(b.slice(1, 5)),
+          Number(b.slice(5, 7)) - 1,
+          Number(b.slice(7, 9)),
+        );
+        return a_date - b_date;
+      });
+
+      const latest_date = date_fields[date_fields.length - 1];
+      updateDatefields(date_fields);
+      updateStatusdatefield(`${latest_date}_NVS`);
+      updateNewHandedoverJVfield(`${latest_date}_JV`);
+      updateNewHandedoverNYfield(`${latest_date}_NY`);
+
+      // Default lot layer renderer
+      // lotLayerStatusRenderer.field = `${latest_date}_NVS`;
+      // lotLayer.renderer = lotLayerStatusRenderer;
+      //----------------------------------------//
+      //      As of date and latest date        //
+      //----------------------------------------//
+      dateUpdate().then((response) => {
+        updateAsofdate(response[0][0]);
+        updateLatestasofdate(response[0][2]);
+      });
+    });
+  }, []);
 
   arcgisMap?.viewOnReady(() => {
     // console.log(mapView);

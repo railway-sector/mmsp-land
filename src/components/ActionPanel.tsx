@@ -9,12 +9,18 @@ import "@arcgis/map-components/components/arcgis-layer-list";
 import "@arcgis/map-components/components/arcgis-legend";
 import "@arcgis/map-components/components/arcgis-time-slider";
 import { defineActions } from "../uniqueValues";
-// import Timeslider from "./Timeslider";
+import Timeslider from "./Timeslider";
 import { MyContext } from "../contexts/MyContext";
-import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
+import { updateLotSymbology } from "../Query";
 
 function ActionPanel() {
-  const { timesliderstate } = use(MyContext);
+  const {
+    latestasofdate,
+    updateAsofdate,
+    updateStatusdatefield,
+    updateTimesliderstate,
+    datefields,
+  } = use(MyContext);
   const [activeWidget, setActiveWidget] = useState(null);
   const [nextWidget, setNextWidget] = useState(null);
   const timeSlider = document.querySelector("arcgis-time-slider");
@@ -31,9 +37,19 @@ function ActionPanel() {
 
       if (timeSlider) {
         timeSlider.timeExtent = null;
-        timesliderstate.filter = new FeatureFilter({
-          where: undefined,
+        shellPanel.collapsed = true;
+
+        const year = latestasofdate.getFullYear();
+        const month = latestasofdate.toLocaleString("en-US", {
+          month: "long",
         });
+        const day = latestasofdate.getDate();
+        updateAsofdate(`${month} ${day}, ${year}`);
+
+        const resetLatestDate = datefields[datefields.length - 1];
+        updateStatusdatefield(`${resetLatestDate}_NVS`);
+        updateLotSymbology(`${resetLatestDate}_NVS`);
+        updateTimesliderstate(false);
       }
     }
 
@@ -43,6 +59,13 @@ function ActionPanel() {
       );
       actionNextWidget.hidden = false;
       shellPanel.collapsed = false;
+
+      // Timeslider and handedOver charts do not appear in shell-panel so
+      // need to collapse shell-panel manually
+      if (nextWidget === "timeslider") {
+        shellPanel.collapsed = true;
+        updateTimesliderstate(true);
+      }
     }
   });
 
@@ -87,16 +110,16 @@ function ActionPanel() {
             }}
           ></calcite-action>
 
-          {/* <calcite-action
+          <calcite-action
             data-action-id="timeslider"
             icon="sliders-horizontal"
-            text="Handed-Over Lots"
+            text="Land Status Change"
             id="timeslider"
             onClick={(event: any) => {
               setNextWidget(event.target.id);
               setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
             }}
-          ></calcite-action> */}
+          ></calcite-action>
 
           {/*<CalciteAction
             data-action-id="charts"
@@ -137,11 +160,7 @@ function ActionPanel() {
           <arcgis-basemap-gallery referenceElement="arcgis-map"></arcgis-basemap-gallery>
         </calcite-panel>
 
-        <calcite-panel
-          height="l"
-          data-panel-id="timeslider"
-          hidden
-        ></calcite-panel>
+        <calcite-panel data-panel-id="timeslider" hidden></calcite-panel>
 
         {/* <CalcitePanel
           class="timeSeries-panel"
@@ -169,13 +188,14 @@ function ActionPanel() {
             </div>
           ) : (
             <div className="informationDiv" hidden></div>
+            // <div className="informationDiv" hidden></div>
           )}
         </calcite-panel>
       </calcite-shell-panel>
 
-      {/* {nextWidget === "timeslider" && nextWidget !== activeWidget && (
-        <Timeslider />
-      )} */}
+      {nextWidget === "timeslider" &&
+        !activeWidget &&
+        nextWidget !== activeWidget && <Timeslider />}
     </>
   );
 }

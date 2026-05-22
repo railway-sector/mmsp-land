@@ -67,6 +67,8 @@ export const statusStructure = [
   "Quit Claim",
 ];
 
+export const statusStructureValues = [1, 2, 3, 4, 5, 6];
+
 export const colorStructure = [
   [112, 173, 71], // Paid #70AD47
   [0, 112, 255], // For Payment Processing #0070FF
@@ -88,7 +90,7 @@ export const colorStructureHex = [
 export const statusStructureQuery = statusStructure.map((status, index) => {
   return Object.assign({
     category: status,
-    value: index + 1,
+    value: statusStructureValues[index],
     color: colorStructureHex[index],
   });
 });

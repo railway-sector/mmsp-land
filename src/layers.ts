@@ -27,7 +27,71 @@ import {
   lotStatusField,
   handedOverField,
   tobeHandedOverField,
+  cpField,
+  lotTypeField,
+  station1Field,
 } from "./uniqueValues";
+import QueryExpressionLayers from "query-layers-expression";
+
+export const queryc = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const querycExpro = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc3 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc4 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const querycRenderer = new QueryExpressionLayers(
+  [undefined, undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
 
 /* Standalone table for Dates */
 export const dateTable = new FeatureLayer({
@@ -183,8 +247,17 @@ export const senateStationBoxOld = new FeatureLayer({
 });
 
 /* Land */
+export const lotDefaultSymbol = new SimpleFillSymbol({
+  color: [0, 0, 0, 0],
+  style: "solid",
+  outline: {
+    // autocasts as new SimpleLineSymbol()
+    color: [110, 110, 110],
+    width: 0.7,
+  },
+});
 
-const lotLayerUniquValueInfos: any = statusLotLabel.map(
+export const lotLayerUniquValueInfos: any = statusLotLabel.map(
   (status: any, index: any) => {
     return Object.assign({
       value: index + 1,
@@ -196,7 +269,7 @@ const lotLayerUniquValueInfos: any = statusLotLabel.map(
   },
 );
 
-const lotLayerStatusRenderer = new UniqueValueRenderer({
+export const lotLayerStatusRenderer = new UniqueValueRenderer({
   field: lotStatusField,
   // defaultSymbol: defaultSymbolLot,
   uniqueValueInfos: lotLayerUniquValueInfos,
@@ -217,10 +290,10 @@ const lotLabel = new LabelClass({
 
 export const lotLayer = new FeatureLayer({
   portalItem: {
-    id: "0c172b82ddab44f2bb439542dd75e8ae",
+    id: "93790e8102f84713a69e562da12bb415",
     portal: portal_url,
   },
-  layerId: 8,
+  // layerId: 8,
   outFields: [lot_id_field, lotStatusField],
   title: lot_layer_title,
   labelingInfo: [lotLabel],

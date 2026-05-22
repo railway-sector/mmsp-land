@@ -1,16 +1,9 @@
-import { useEffect, useState } from "react";
-
-import { dateUpdate } from "../Query";
+import { use } from "react";
 import DropdownData from "./DropdownContext";
+import { MyContext } from "../contexts/MyContext";
 
 function Header() {
-  const [asOfDate, setAsOfDate] = useState(null);
-
-  useEffect(() => {
-    dateUpdate().then((response) => {
-      setAsOfDate(response);
-    });
-  }, []);
+  const { asofdate } = use(MyContext);
 
   return (
     <>
@@ -56,7 +49,7 @@ function Header() {
             marginBottom: "3px",
           }}
         >
-          {!asOfDate ? "" : "As of " + asOfDate}
+          {!asofdate ? "" : "As of " + asofdate}
         </div>
 
         {/* Dropdown component */}
