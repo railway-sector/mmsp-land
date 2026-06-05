@@ -7,7 +7,7 @@ import "@arcgis/map-components/components/arcgis-zoom";
 import "@esri/calcite-components/components/calcite-shell";
 import "@esri/calcite-components/components/calcite-navigation";
 import "@esri/calcite-components/components/calcite-navigation-logo";
-
+import "@arcgis/ai-components/components/arcgis-assistant";
 import {
   accessRoadOptionsGroupLayer,
   alignmentLine,
@@ -129,6 +129,7 @@ export default function MapDisplay() {
   return (
     <>
       <arcgis-map
+        id="test-map"
         basemap="dark-gray-vector"
         ground="world-elevation"
         center="121.0194387, 14.6972616"

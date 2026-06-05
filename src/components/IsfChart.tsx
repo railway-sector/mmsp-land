@@ -20,7 +20,7 @@ import {
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
-import { pieChartStatusData, totalFieldCount } from "../ChartGenerator";
+import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
 
 // Dispose function
 function maybeDisposeRoot(divId: any) {
@@ -85,10 +85,11 @@ const IsfChart = memo(() => {
     });
 
     //--- total number of households
-    totalFieldCount({
+    fieldStatistic({
       qChart: queryc.queryExpression(),
       layer: isfLayer,
-      idField: statusIsfField,
+      statisticField: statusIsfField,
+      statisticType: "count",
     }).then((result: any) => {
       setIsfNumber(result);
     });

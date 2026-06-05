@@ -25,7 +25,7 @@ import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
-import { pieChartStatusData, totalFieldCount } from "../ChartGenerator";
+import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
 
 // Dispose function
 function maybeDisposeRoot(divId: any) {
@@ -140,28 +140,31 @@ const StructureChart = memo(() => {
     });
 
     //--- total number of structure
-    totalFieldCount({
+    fieldStatistic({
       qChart: queryc.queryExpression(),
       layer: structureLayer,
-      idField: structureIdField,
+      statisticField: structureIdField,
+      statisticType: "count",
     }).then((result: any) => {
       setStructureNumber(result);
     });
 
     //--- numbe of demolished structures
-    totalFieldCount({
+    fieldStatistic({
       qChart: `${queryc.queryExpression()} AND ${structureRemarksField} = 'Demolished'`,
       layer: structureLayer,
-      idField: structureRemarksField,
+      statisticField: structureRemarksField,
+      statisticType: "count",
     }).then((result: any) => {
       setStrucDemolishedNumber(result);
     });
 
     //--- number of structures subject to demolition
-    totalFieldCount({
+    fieldStatistic({
       qChart: `${queryc.queryExpression()} AND ${structureRemarksField} IS NOT NULL`,
       layer: structureLayer,
-      idField: structureRemarksField,
+      statisticField: structureRemarksField,
+      statisticType: "count",
     }).then((result: any) => {
       setStrucNumberForDemolition(result);
     });
