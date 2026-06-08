@@ -1,1 +1,0 @@
-import{a7 as i,ac as c,fK as h,ag as d,t as o}from"./index-V3DxPEmc.js";const f=s=>{const r=s;let e=class extends r{initialize(){this.addHandles(h(()=>this.layer,"refresh",t=>{this.doRefresh(t.dataChanged).catch(a=>{d(a)||o.getLogger(this).error(a)})}),"RefreshableLayerView")}};return e=i([c("esri.views.layers.RefreshableLayerView")],e),e};export{f as i};
