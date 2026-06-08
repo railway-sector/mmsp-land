@@ -5,6 +5,7 @@ import {
   lotLayer,
   publicLotLayer,
   queryc,
+  querycRenderer,
   subterraenanLots18_layer,
   tobeHandedOverLotLayer,
 } from "../layers";
@@ -16,13 +17,10 @@ import { thousands_separators, zoomToLayer } from "../Query";
 import "@esri/calcite-components/components/calcite-checkbox";
 import "@esri/calcite-components/components/calcite-label";
 import {
-  cpField,
   handedOverField,
   lot_id_field,
   lotStatusField,
-  lotTypeField,
   primaryLabelColor,
-  station1Field,
   statusLotColor,
   statusLotLabel,
   statusLotQuery,
@@ -220,17 +218,14 @@ const LotChart = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
+    querycRenderer.qValues = [contractp, landtype, landsection];
+
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      q1Value: contractp,
-      q1Field: cpField,
-      q2Value: landtype,
-      q2Field: lotTypeField,
-      q3Value: landsection,
-      q3Field: station1Field,
+      qChart: querycRenderer,
       status_field: timesliderstate ? statusdatefield : lotStatusField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,

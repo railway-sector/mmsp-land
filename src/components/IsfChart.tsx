@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, memo, use } from "react";
-import { isfLayer, queryc } from "../layers";
+import { isfLayer, queryc, querycRenderer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -9,10 +9,7 @@ import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
   colorIsf,
-  cpField,
-  lotTypeField,
   primaryLabelColor,
-  station1Field,
   statusIsf,
   statusIsfField,
   statusIsfQuery,
@@ -143,18 +140,15 @@ const IsfChart = memo(() => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
+    querycRenderer.qValues = [contractp, landtype, landsection];
+
     // Render chart
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      q1Value: contractp,
-      q1Field: cpField,
-      q2Value: landtype,
-      q2Field: lotTypeField,
-      q3Value: landsection,
-      q3Field: station1Field,
+      qChart: querycRenderer,
       status_field: statusIsfField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,

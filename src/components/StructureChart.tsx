@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useEffect, useRef, useState, memo, use } from "react";
-import { queryc, structureLayer } from "../layers";
+import { queryc, querycRenderer, structureLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -10,10 +10,7 @@ import { thousands_separators } from "../Query";
 
 import {
   colorStructureHex,
-  cpField,
-  lotTypeField,
   primaryLabelColor,
-  station1Field,
   statusStructure,
   statusStructureField,
   statusStructureQuery,
@@ -223,6 +220,8 @@ const StructureChart = memo(() => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
+    querycRenderer.qValues = [contractp, landtype, landsection];
+
     // Render chart
     chartRenderer({
       chartItem: "structure",
@@ -230,12 +229,7 @@ const StructureChart = memo(() => {
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      q1Value: contractp,
-      q1Field: cpField,
-      q2Value: landtype,
-      q2Field: lotTypeField,
-      q3Value: landsection,
-      q3Field: station1Field,
+      qChart: querycRenderer,
       status_field: statusStructureField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,
