@@ -76,6 +76,7 @@ const IsfChart = memo(() => {
       statusList: statusIsf,
       statusColor: colorIsf,
       statusField: statusIsfField,
+      statisticField: statusIsfField,
       statisticType: "count",
     }).then((result: any) => {
       setIsfData(result[0]);

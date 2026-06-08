@@ -131,6 +131,7 @@ const StructureChart = memo(() => {
       statusList: statusStructure,
       statusColor: colorStructureHex,
       statusField: statusStructureField,
+      statisticField: statusStructureField,
       statisticType: "count",
     }).then((result: any) => {
       setStructureData(result[0]);
