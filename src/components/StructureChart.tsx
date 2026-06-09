@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useEffect, useRef, useState, memo, use } from "react";
-import { queryc, querycRenderer, structureLayer } from "../layers";
+import {
+  queryc_struc,
+  queryc_struc2,
+  queryc_struc3,
+  structureLayer,
+} from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { thousands_separators } from "../Query";
+import { thousands_separators, queryDefinitionExpression } from "../Query";
 
 import {
   colorStructureHex,
@@ -20,7 +25,6 @@ import {
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
-import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
 import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
 
@@ -118,15 +122,17 @@ const StructureChart = memo(() => {
   const chartID = "structure-chart";
 
   useEffect(() => {
-    queryc.qValues = [contractp, landtype, landsection];
+    queryc_struc.qValues = [contractp, landtype, landsection];
+    queryc_struc.qExpression = `${statusStructureField} >= 1`;
+
     queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
+      queryExpression: queryc_struc.queryExpression(),
       featureLayer: [structureLayer],
     });
 
     //--- chart data
     pieChartStatusData({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_struc.queryExpression(),
       layer: structureLayer,
       statusList: statusStructure,
       statusColor: colorStructureHex,
@@ -139,7 +145,7 @@ const StructureChart = memo(() => {
 
     //--- total number of structure
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_struc.queryExpression(),
       layer: structureLayer,
       statisticField: structureIdField,
       statisticType: "count",
@@ -148,8 +154,10 @@ const StructureChart = memo(() => {
     });
 
     //--- numbe of demolished structures
+    queryc_struc2.qValues = [contractp, landtype, landsection];
+    queryc_struc2.qExpression = `${structureRemarksField} = 'Demolished'`;
     fieldStatistic({
-      qChart: `${queryc.queryExpression()} AND ${structureRemarksField} = 'Demolished'`,
+      qChart: queryc_struc2.queryExpression(),
       layer: structureLayer,
       statisticField: structureRemarksField,
       statisticType: "count",
@@ -158,8 +166,10 @@ const StructureChart = memo(() => {
     });
 
     //--- number of structures subject to demolition
+    queryc_struc3.qValues = [contractp, landtype, landsection];
+    queryc_struc3.qExpression = `${structureRemarksField} IS NOT NULL`;
     fieldStatistic({
-      qChart: `${queryc.queryExpression()} AND ${structureRemarksField} IS NOT NULL`,
+      qChart: queryc_struc3.queryExpression(),
       layer: structureLayer,
       statisticField: structureRemarksField,
       statisticType: "count",
@@ -221,8 +231,6 @@ const StructureChart = memo(() => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    querycRenderer.qValues = [contractp, landtype, landsection];
-
     // Render chart
     chartRenderer({
       chartItem: "structure",
@@ -230,7 +238,7 @@ const StructureChart = memo(() => {
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      qChart: querycRenderer,
+      qChart: queryc_struc,
       status_field: statusStructureField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,

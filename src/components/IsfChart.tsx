@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, memo, use } from "react";
-import { isfLayer, queryc, querycRenderer } from "../layers";
+import { isfLayer, queryc_isf } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { thousands_separators } from "../Query";
+import { thousands_separators, queryDefinitionExpression } from "../Query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
@@ -15,7 +15,6 @@ import {
   statusIsfQuery,
   valueLabelColor,
 } from "../uniqueValues";
-import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
 import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
 
@@ -64,14 +63,14 @@ const IsfChart = memo(() => {
   const chartID = "isf-pie";
 
   useEffect(() => {
-    queryc.qValues = [contractp, landtype, landsection];
+    queryc_isf.qValues = [contractp, landtype, landsection];
     queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
+      queryExpression: queryc_isf.queryExpression(),
       featureLayer: [isfLayer],
     });
 
     pieChartStatusData({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_isf.queryExpression(),
       layer: isfLayer,
       statusList: statusIsf,
       statusColor: colorIsf,
@@ -84,7 +83,7 @@ const IsfChart = memo(() => {
 
     //--- total number of households
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_isf.queryExpression(),
       layer: isfLayer,
       statisticField: statusIsfField,
       statisticType: "count",
@@ -141,15 +140,13 @@ const IsfChart = memo(() => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    querycRenderer.qValues = [contractp, landtype, landsection];
-
     // Render chart
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      qChart: querycRenderer,
+      qChart: queryc_isf,
       status_field: statusIsfField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,

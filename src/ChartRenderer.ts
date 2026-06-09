@@ -39,52 +39,6 @@ export function responsiveChart(
   });
 }
 
-type layerViewQueryProps = {
-  layer?: any;
-  qExpression?: any;
-  view: any;
-};
-
-export const highlightFilterLayerView = ({
-  layer,
-  qExpression,
-  view,
-}: layerViewQueryProps) => {
-  const query = layer.createQuery();
-  query.where = qExpression;
-  let highlightSelect: any;
-
-  view?.whenLayerView(layer).then((layerView: any) => {
-    layer?.queryObjectIds(query).then((results: any) => {
-      const objID = results;
-
-      const queryExt = new Query({
-        objectIds: objID,
-      });
-      layer?.queryExtent(queryExt).then((result: any) => {
-        if (result?.extent) {
-          view?.goTo(result.extent);
-        }
-      });
-
-      highlightSelect && highlightSelect.remove();
-      highlightSelect = layerView.highlight(objID);
-    });
-
-    layerView.filter = new FeatureFilter({
-      where: qExpression,
-    });
-
-    // For initial state, we need to add this
-    view?.on("click", () => {
-      layerView.filter = new FeatureFilter({
-        where: undefined,
-      });
-      highlightSelect && highlightSelect.remove();
-    });
-  });
-};
-
 interface chartType {
   chartItem?: any;
   chart: any;
@@ -247,3 +201,39 @@ export function chartRenderer({
 
   pieSeries.appear(1000, 100);
 }
+
+type layerViewQueryProps = {
+  layer?: any;
+  qExpression?: any;
+  view: any;
+};
+
+export const highlightFilterLayerView = async ({
+  layer,
+  qExpression,
+  view,
+}: layerViewQueryProps) => {
+  const query = layer.createQuery();
+  query.where = qExpression;
+  let highlightSelect: any;
+
+  const layerView = await view?.whenLayerView(layer);
+  const results = await layer?.queryObjectIds(query);
+
+  const queryExt = new Query({ objectIds: results });
+  const qExtResult = await layer?.queryExtent(queryExt);
+  if (qExtResult?.extent) {
+    view?.goTo(qExtResult.extent);
+  }
+
+  highlightSelect && highlightSelect.remove();
+  highlightSelect = layerView.highlight(results);
+
+  layerView.filter = new FeatureFilter({ where: qExpression });
+  view?.on("click", () => {
+    layerView.filter = new FeatureFilter({
+      where: undefined,
+    });
+    highlightSelect && highlightSelect.remove();
+  });
+};

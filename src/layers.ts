@@ -33,7 +33,79 @@ import {
 } from "./uniqueValues";
 import QueryExpressionLayers from "query-layers-expression";
 
-export const queryc = new QueryExpressionLayers(
+export const queryc_lot = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_lot2 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_lot3 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_struc = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_struc2 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_struc3 = new QueryExpressionLayers(
+  [undefined, undefined],
+  [cpField, lotTypeField, station1Field],
+  undefined,
+  undefined,
+  "string",
+  0,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const queryc_isf = new QueryExpressionLayers(
   [undefined, undefined],
   [cpField, lotTypeField, station1Field],
   undefined,

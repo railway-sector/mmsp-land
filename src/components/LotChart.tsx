@@ -4,8 +4,7 @@ import {
   handedOverLotLayer,
   lotLayer,
   publicLotLayer,
-  queryc,
-  querycRenderer,
+  queryc_lot,
   subterraenanLots18_layer,
   tobeHandedOverLotLayer,
 } from "../layers";
@@ -13,7 +12,11 @@ import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { thousands_separators, zoomToLayer } from "../Query";
+import {
+  thousands_separators,
+  zoomToLayer,
+  queryDefinitionExpression,
+} from "../Query";
 import "@esri/calcite-components/components/calcite-checkbox";
 import "@esri/calcite-components/components/calcite-label";
 import {
@@ -28,7 +31,6 @@ import {
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
-import { queryDefinitionExpression } from "../QueryExpression";
 import { chartRenderer } from "../ChartRenderer";
 import { pieChartStatusData, fieldStatistic } from "../ChartGenerator";
 
@@ -99,9 +101,9 @@ const LotChart = () => {
     useState<number>(0);
 
   useEffect(() => {
-    queryc.qValues = [contractp, landtype, landsection];
+    queryc_lot.qValues = [contractp, landtype, landsection];
     queryDefinitionExpression({
-      queryExpression: queryc.queryExpression(),
+      queryExpression: queryc_lot.queryExpression(),
       featureLayer: [
         lotLayer,
         handedOverLotLayer,
@@ -113,7 +115,7 @@ const LotChart = () => {
 
     //--- chart data
     pieChartStatusData({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statusList: statusLotLabel,
       statusColor: statusLotColor,
@@ -127,7 +129,7 @@ const LotChart = () => {
 
     //--- total number of lots (public + private)
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: lot_id_field,
       statisticType: "count",
@@ -137,7 +139,7 @@ const LotChart = () => {
 
     //--- Number of handed-over lots (GC to JV)
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: timesliderstate ? newHandedoverJVfield : handedOverField,
       statisticType: "sum",
@@ -147,7 +149,7 @@ const LotChart = () => {
 
     //--- Number of To-be-handed-over lots (to JV)
     fieldStatistic({
-      qChart: queryc.queryExpression(),
+      qChart: queryc_lot.queryExpression(),
       layer: lotLayer,
       statisticField: timesliderstate
         ? newHandedoverNYfield
@@ -219,14 +221,12 @@ const LotChart = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    querycRenderer.qValues = [contractp, landtype, landsection];
-
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      qChart: querycRenderer,
+      qChart: queryc_lot,
       status_field: timesliderstate ? statusdatefield : lotStatusField,
       arcgisMap: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,
