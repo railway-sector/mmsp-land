@@ -1,9 +1,14 @@
-import { use } from "react";
 import DropdownData from "./DropdownContext";
-import { MyContext } from "../contexts/MyContext";
+import { dateDisplayKeys } from "../interfaceKeys";
+import type { DisplayDates } from "../interfaceKeys";
+import { useQuery } from "@tanstack/react-query";
 
 function Header() {
-  const { asofdate } = use(MyContext);
+  const { data: newAsOfDate } = useQuery<DisplayDates | any>({
+    queryKey: dateDisplayKeys.selected,
+    queryFn: async () => ({}),
+    staleTime: Infinity,
+  });
 
   return (
     <>
@@ -49,7 +54,7 @@ function Header() {
             marginBottom: "3px",
           }}
         >
-          {!asofdate ? "" : "As of " + asofdate}
+          {!newAsOfDate?.asOfDate ? "" : "As of " + newAsOfDate?.asOfDate}
         </div>
 
         {/* Dropdown component */}

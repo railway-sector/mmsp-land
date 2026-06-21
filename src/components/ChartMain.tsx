@@ -5,22 +5,37 @@ import "@esri/calcite-components/components/calcite-tab-title";
 import "@esri/calcite-components/components/calcite-switch";
 import "@esri/calcite-components/components/calcite-panel";
 import "@esri/calcite-components/components/calcite-shell-panel";
-
-import { use, useState } from "react";
-
-import LotChart from "./LotChart";
+import { useState } from "react";
 import "../index.css";
 import { primaryLabelColor } from "../uniqueValues";
-import StructureChart from "./StructureChart";
-import IsfChart from "./IsfChart";
-import ExpropriationList from "./ExpropriationList";
-import LotIssueList from "./LotIssueList";
-import { MyContext } from "../contexts/MyContext";
+import ChartStructure from "./ChartStructure";
+import ChartIsf from "./ChartIsf";
+import ListExpropriation from "./ListExpropriation";
+import ListIssueLot from "./ListIssueLot";
+import { createContext } from "react";
+import ChartLot from "./ChartLot";
 
-function MainChart() {
-  const { backgroundcolorSwitch } = use(MyContext);
+type bkColorSwitchType = {
+  bkColor: any;
+  updateBkColor: any;
+};
+
+const initialState = {
+  bkColor: undefined,
+  updateBkColor: undefined,
+};
+
+export const MyContext = createContext<bkColorSwitchType>({
+  ...initialState,
+});
+
+function ChartMain() {
   const [panelWidth, setPanelWidth] = useState<string>("40%");
   const [panelHeader, setPanelHeader] = useState<string>("Chart");
+  const [bkColor, setBkColor] = useState<any>("#2b2b2b");
+  const updateBkColor = (newBkColor: any) => {
+    setBkColor(newBkColor);
+  };
 
   const handlePanelCollapse = (event: any) => {
     const collapse_state = event.target.collapsed;
@@ -59,9 +74,11 @@ function MainChart() {
         <calcite-tabs
           layout="center"
           scale="m"
-          style={{
-            backgroundColor: "#2b2b2b",
-          }}
+          style={
+            {
+              // backgroundColor: bkColor,
+            }
+          }
         >
           <calcite-tab-nav slot="title-group" id="thetabs">
             <calcite-tab-title className="Land">Land</calcite-tab-title>
@@ -80,31 +97,32 @@ function MainChart() {
           {/* CalciteTab: Lot */}
           <calcite-tab
             style={{
-              backgroundColor:
-                backgroundcolorSwitch === false ? "#2b2b2b" : "white",
+              backgroundColor: bkColor,
             }}
           >
-            <LotChart />
+            <MyContext value={{ bkColor, updateBkColor }}>
+              <ChartLot />
+            </MyContext>
           </calcite-tab>
 
           {/* CalciteTab: Structure */}
           <calcite-tab>
-            <StructureChart />
+            <ChartStructure />
           </calcite-tab>
 
           {/* CalciteTab: Non-Land Owner */}
           <calcite-tab>
-            <IsfChart />
+            <ChartIsf />
           </calcite-tab>
 
           {/* CalciteTab: List of Lodts under Expropriation */}
           <calcite-tab>
-            <ExpropriationList />
+            <ListExpropriation />
           </calcite-tab>
 
           {/* CalciteTab: List of Lot issues */}
           <calcite-tab>
-            <LotIssueList />
+            <ListIssueLot />
           </calcite-tab>
         </calcite-tabs>
       </calcite-panel>
@@ -112,4 +130,4 @@ function MainChart() {
   );
 }
 
-export default MainChart;
+export default ChartMain;

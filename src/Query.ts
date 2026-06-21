@@ -1,89 +1,36 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import {
-  dateTable,
-  lotDefaultSymbol,
-  lotLayer,
-  lotLayerUniquValueInfos,
-} from "./layers";
-import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-
-//---------------------------------------------------------//
-//    Definition Expression using queryExpression          //
-//---------------------------------------------------------//
-interface queryDefinitionExpressionType {
-  queryExpression?: string;
-  featureLayer?:
-    | [FeatureLayer, FeatureLayer?, FeatureLayer?, FeatureLayer?, FeatureLayer?]
-    | any;
-}
-
-export function queryDefinitionExpression({
-  queryExpression,
-  featureLayer,
-}: queryDefinitionExpressionType) {
-  if (queryExpression) {
-    if (featureLayer) {
-      if (Array.isArray(featureLayer)) {
-        featureLayer.forEach((layer) => {
-          if (layer) {
-            layer.definitionExpression = queryExpression;
-            // layer.visible = true;
-          }
-        });
-      } else {
-        featureLayer.definitionExpression = queryExpression;
-        // featureLayer.visible = true;
-      }
-    }
-  }
-}
+import { dateTable } from "./layers";
 
 //----------------------------------------//
-//------ Symbology of lot layer ----------//
+//------        Date and Month       -----//
 //----------------------------------------//
-export function updateLotSymbology(new_date_field: any) {
-  try {
-    const lotLayerRenderer = new UniqueValueRenderer({
-      field: new_date_field,
-      defaultSymbol: lotDefaultSymbol, // autocasts as new SimpleFillSymbol()
-      uniqueValueInfos: lotLayerUniquValueInfos,
-    });
-    lotLayer.renderer = lotLayerRenderer;
-  } catch (error) {
-    console.error("Error fetching data from FeatureServer:", error);
-  }
-}
-
-// Updat date
 export async function dateUpdate() {
   const query = dateTable.createQuery();
-  query.where = "category = 'Land Acquisition'"; // "project = 'N2'" + ' AND ' + "category = 'Land Acquisition'";
+  query.where = `category = 'Land Acquisition'`;
 
-  return dateTable.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const dates = stats.map((result: any) => {
-      // get today and date recorded in the table
-      const today = new Date();
-      const date = new Date(result.attributes.date);
+  const response = await dateTable.queryFeatures(query);
+  const dates = response.features.map((result: any) => {
+    // get today and date recorded in the table
+    const today = new Date();
+    const date = new Date(result.attributes.date);
 
-      // Calculate the number of days passed since the last update
-      const time_passed = today.getTime() - date.getTime();
-      const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
+    // Calculate the number of days passed since the last update
+    const time_passed = today.getTime() - date.getTime();
+    const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
 
-      const year = date.getFullYear();
-      const month = date.toLocaleString("en-US", {
-        month: "long",
-      });
-      const day = date.getDate();
-      const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
-      return [as_of_date, days_passed, date];
+    const year = date.getFullYear();
+    const month = date.toLocaleString("en-US", {
+      month: "long",
     });
-    return dates;
+    const day = date.getDate();
+    const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
+    return [as_of_date, days_passed, date];
   });
+  return dates;
 }
-
-// Thousand separators function
+//----------------------------------------------//
+//                 Others                       //
+//----------------------------------------------//
 export function thousands_separators(num: any) {
   if (num) {
     const num_parts = num.toString().split(".");

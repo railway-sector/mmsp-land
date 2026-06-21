@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { use, useEffect, useState } from "react";
 import { lotLayer, querycExpro } from "../layers";
 import Query from "@arcgis/core/rest/support/Query";
 import "@esri/calcite-components/components/calcite-shell";
@@ -11,7 +10,9 @@ import "@esri/calcite-components/components/calcite-avatar";
 import "@esri/calcite-components/components/calcite-action-bar";
 import { lotIssueListField } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
-import { MyContext } from "../contexts/MyContext";
+import { useQuery } from "@tanstack/react-query";
+import { locationKeys } from "../interfaceKeys";
+import type { SelectedLocation } from "../interfaceKeys";
 
 // Zoom in to selected lot from expropriation list
 let highlightSelect: any;
@@ -39,46 +40,53 @@ async function resultClickHandler(event: any) {
   });
 }
 
-const LotIssueList = () => {
-  const { contractp, landtype, landsection } = use(MyContext);
-  const [exproItem, setExproItem] = useState<undefined | any>([]);
+const ListIssueLot = () => {
+  //--- 1. Location state
+  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
+    queryKey: locationKeys.selected,
+    queryFn: async () => ({}),
+    staleTime: Infinity,
+  });
+  const cpackage = selectedLocation?.cpackage;
+  const landtype = selectedLocation?.landType;
+  const landsection = selectedLocation?.landSection;
 
-  useEffect(() => {
-    // Reset the list
+  //--- queryFeatures function
+  async function queryFeatures() {
     const query = lotLayer.createQuery();
-    querycExpro.qValues = [contractp, landtype, landsection];
+
+    querycExpro.qValues = [cpackage, landtype, landsection];
     querycExpro.qExpression = `${lotIssueListField} IS NOT NULL`;
     query.where = querycExpro.queryExpression();
-
+    query.outFields = ["*"];
     query.returnGeometry = true;
-    lotLayer.queryFeatures(query).then((result: any) => {
-      setExproItem && setExproItem([]);
 
-      result.features.map((feature: any, index: any) => {
+    return await lotLayer?.queryFeatures(query);
+  }
+
+  //--- Obtain queried Features
+  const { data } = useQuery<any>({
+    queryKey: [cpackage, landtype, landsection, lotIssueListField],
+    queryFn: () => queryFeatures(),
+    select: (response) => {
+      return response.features;
+    },
+  });
+
+  const exproItem = data
+    ? data.map((feature: any, index: number) => {
         const attributes = feature.attributes;
-        const lotid = attributes.Id;
-        const cp = attributes.Package;
-        const landtype = attributes.Type;
-        const issue = attributes.Issue;
-        const landsection = attributes.Station1;
-        const objectid = attributes.OBJECTID;
-        const id = index;
-
-        setExproItem((prev: any) => [
-          ...prev,
-          {
-            id: id,
-            lotid: lotid,
-            cp: cp,
-            landtype: landtype,
-            issue: issue,
-            landsection: landsection,
-            objectid: objectid,
-          },
-        ]);
-      });
-    });
-  }, [contractp, landtype, landsection]);
+        return {
+          id: index,
+          lotid: attributes.Id,
+          cp: attributes.Package,
+          landtype: attributes.Type,
+          issue: attributes.Issue,
+          landsection: attributes.Station1,
+          objectid: attributes.OBJECTID,
+        };
+      })
+    : [];
 
   return (
     <>
@@ -137,4 +145,4 @@ const LotIssueList = () => {
   );
 };
 
-export default LotIssueList;
+export default ListIssueLot;

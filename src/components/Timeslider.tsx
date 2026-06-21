@@ -1,26 +1,49 @@
 import "@arcgis/map-components/components/arcgis-time-slider";
-import { MyContext } from "../contexts/MyContext";
-import { use } from "react";
-import { updateLotSymbology } from "../Query";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  timesliderFieldKeys,
+  dateDisplayKeys,
+  timesliderKeys,
+  datefieldKeys,
+} from "../interfaceKeys";
+import type {
+  TimesliderFieldsTypes,
+  DisplayDates,
+  TimeSliderState,
+  DateFieldsType,
+} from "../interfaceKeys";
+import { updateLotSymbology } from "../timesliderQuery";
 
 export default function Timeslider() {
-  const {
-    updateStatusdatefield,
-    datefields,
-    latestasofdate,
-    updateTimesliderstate,
-    updateAsofdate,
-    updateNewHandedoverJVfield,
-    updateNewHandedoverNYfield,
-  } = use(MyContext);
   const arcgisMap = document.querySelector("arcgis-map");
+  const queryClient = useQueryClient();
+
+  //--- Update timeslider state
+  const handletimesliderStateChange = () => {
+    const updatedTimesliderState: TimeSliderState = {
+      timesliderstate: true,
+    };
+
+    queryClient.setQueryData<TimeSliderState>(
+      timesliderKeys.selected,
+      updatedTimesliderState,
+    );
+  };
+
+  //-- Date Fields
+  const { data: dateField } = useQuery<DateFieldsType | any>({
+    queryKey: datefieldKeys.selected,
+    queryFn: async () => ({}),
+    staleTime: Infinity,
+  });
+  const latestasofdate = dateField?.latestasofdate;
 
   arcgisMap?.viewOnReady(() => {
     const timeSlider: any = document.querySelector("arcgis-time-slider");
 
     const dateCollect: any = [];
-    datefields.map((date: any) => {
+    dateField?.dateFields.map((date: any) => {
       const yyyy = Number(date.slice(1, 5));
       const desired_mm = Number(date.slice(5, 7));
       const dd = Number(date.slice(7, 9));
@@ -33,7 +56,6 @@ export default function Timeslider() {
 
     timeSlider.fullTimeExtent = {
       start: dateCollect[0],
-      // end: dateCollect[dateCollect.length - 1].push(latestasofdate),
       end: latestasofdate,
     };
 
@@ -49,18 +71,24 @@ export default function Timeslider() {
           const month = timeExtent.end.getMonth() + 1;
           const day = timeExtent.end.getDate();
 
-          // for 'As of' date in chart panel
+          //--- for 'As of' date in chart panel
           const c_month = timeExtent.end.toLocaleString("en-US", {
             month: "long",
           });
-          updateAsofdate(`${c_month} ${day}, ${year}`);
 
+          queryClient.setQueryData<DisplayDates | any>(
+            dateDisplayKeys.selected,
+            {
+              asOfDate: `${c_month} ${day}, ${year}`,
+            },
+          );
+
+          //--- Updating status and date fields for time slider:
           const yyyy0mdd = `x${year}0${month}${day}`;
           const yyyymmdd = `x${year}${month}${day}`;
           const yyyymm0d = `x${year}${month}0${day}`;
           const yyyy0m0d = `x${year}0${month}0${day}`;
 
-          // Updating status field:
           const new_date_field =
             month <= 9 && day <= 9
               ? yyyy0m0d
@@ -70,17 +98,17 @@ export default function Timeslider() {
                   ? yyyymm0d
                   : yyyymmdd;
 
-          const new_landStatus_field = `${new_date_field}_NVS`;
-          updateLotSymbology(new_landStatus_field);
-          updateStatusdatefield(new_landStatus_field);
+          const new_status_field = `${new_date_field}_NVS`;
+          queryClient.setQueryData<TimesliderFieldsTypes>(
+            timesliderFieldKeys.selected,
+            {
+              statusdateField: new_status_field,
+              newHandedOverJVfield: `${new_date_field}_JV`,
+              newHandedoverNYfield: `${new_date_field}_NY`,
+            },
+          );
 
-          // Updating Handed-Over (GC to JV):
-          const new_handedoverJV_field = `${new_date_field}_JV`;
-          updateNewHandedoverJVfield(new_handedoverJV_field);
-
-          // Updating Affected-Area field:
-          const new_handedoverNY_field = `${new_date_field}_NY`;
-          updateNewHandedoverNYfield(new_handedoverNY_field);
+          updateLotSymbology(new_status_field);
         }
       },
     );
@@ -98,9 +126,7 @@ export default function Timeslider() {
           slot="bottom"
           layout="auto"
           mode="cumulative-from-start"
-          onarcgisPropertyChange={() => {
-            updateTimesliderstate(true);
-          }}
+          onarcgisPropertyChange={handletimesliderStateChange}
         ></arcgis-time-slider>
       </div>
     </>

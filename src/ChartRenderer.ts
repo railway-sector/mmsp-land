@@ -137,6 +137,7 @@ export function chartRenderer({
       layer: layer,
       qExpression: qChart.queryExpression(),
       view: arcgisMap?.view,
+      qChart: qChart,
     });
   });
 
@@ -206,15 +207,17 @@ type layerViewQueryProps = {
   layer?: any;
   qExpression?: any;
   view: any;
+  qChart?: any;
 };
 
 export const highlightFilterLayerView = async ({
   layer,
   qExpression,
   view,
+  qChart,
 }: layerViewQueryProps) => {
   const query = layer.createQuery();
-  query.where = qExpression;
+  query.where = qChart.queryExpression();
   let highlightSelect: any;
 
   const layerView = await view?.whenLayerView(layer);
@@ -234,6 +237,8 @@ export const highlightFilterLayerView = async ({
     layerView.filter = new FeatureFilter({
       where: undefined,
     });
+    qChart.qExpression = undefined;
+    qChart.q2Expression = undefined;
     highlightSelect && highlightSelect.remove();
   });
 };

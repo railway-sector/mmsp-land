@@ -4,6 +4,8 @@ export type statisticsType = "count" | "sum";
 // Chart and chart label color
 export const primaryLabelColor = "#d1d5db";
 export const valueLabelColor = "#d1d5db";
+export const default_bkColor = "#2b2b2b";
+export const white_bkColor = "white";
 
 // Status_Date Query
 export const latest_date = "2026-02-13";
