@@ -50,7 +50,13 @@ const ChartStructure = memo(() => {
 
   //--- 2. Streamlined Data Fetching with useQuery
   const { data } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, landType, landSection, statusStructureField],
+    queryKey: [
+      cpackage,
+      landType,
+      landSection,
+      statusStructureField,
+      structureLayer,
+    ],
     queryFn: async () => {
       const query_qValues = [cpackage, landType, landSection];
 
@@ -103,7 +109,7 @@ const ChartStructure = memo(() => {
         percDemolished: perce_demolished,
       };
     },
-    structuralSharing: false,
+    staleTime: Infinity,
   });
 
   //--- Call chart data

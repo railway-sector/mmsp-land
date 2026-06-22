@@ -43,7 +43,13 @@ const ChartIsf = memo(() => {
   const { data } = useQuery<ChartResponse | any>({
     queryKey: [cpackage, landType, landSection, statusIsfField],
     queryFn: async () => {
-      queryc_isf.qValues = [cpackage, landType, landSection];
+      queryc_isf.qValues = [
+        cpackage,
+        landType,
+        landSection,
+        statusIsf,
+        isfLayer,
+      ];
       queryDefinitionExpression({
         queryExpression: queryc_isf.queryExpression(),
         featureLayer: [isfLayer],
@@ -64,7 +70,7 @@ const ChartIsf = memo(() => {
         totalNumber: chartData[1],
       };
     },
-    structuralSharing: false,
+    staleTime: Infinity,
   });
   const chartData = data?.chartData || [];
   const totaln = data?.totalNumber || 0;

@@ -99,7 +99,15 @@ const ChartLot = () => {
 
   //--- 2. Streamlined Data Fetching with useQuery
   const { data } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, landType, landSection, status_field, timesliderstate],
+    queryKey: [
+      cpackage,
+      landType,
+      landSection,
+      lotStatusField,
+      status_field,
+      timesliderstate,
+      lotLayer,
+    ],
     queryFn: async () => {
       queryc_lot.qValues = [cpackage, landType, landSection];
       queryDefinitionExpression({
@@ -171,6 +179,7 @@ const ChartLot = () => {
         perc_tobe_ho: perc_tob_ho,
       };
     },
+    staleTime: Infinity,
   });
   const chartData = data?.chartData || [];
   const lotNumber = data?.lotNumber || 0;
