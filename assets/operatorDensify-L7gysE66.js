@@ -1,1 +1,0 @@
-import{cd as c}from"./index-Z0VkKdLB.js";import{o as s}from"./ProjectionTransformation-w18vkEhW.js";const e=new s;function m(n,r,t,o){return e.execute(n,r,t,o,null)}function p(n,r,t,o){const u=e.executeMany(new c(n),r,t,o,null);return Array.from(u)}function a(){return e.supportsCurves()}export{p as o,m as t,a as u};
