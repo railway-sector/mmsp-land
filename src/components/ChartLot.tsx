@@ -179,7 +179,7 @@ const ChartLot = () => {
         perc_tobe_ho: perc_tob_ho,
       };
     },
-    staleTime: Infinity,
+    // staleTime: Infinity,
   });
   const chartData = data?.chartData || [];
   const lotNumber = data?.lotNumber || 0;
