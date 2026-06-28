@@ -17,8 +17,6 @@ import {
   lot_id_field,
   lotStatusField,
   primaryLabelColor,
-  statusLotColor,
-  statusLotLabel,
   statusLotQuery,
   tobeHandedOverField,
   white_bkColor,
@@ -110,6 +108,7 @@ const ChartLot = () => {
     ],
     queryFn: async () => {
       queryc_lot.qValues = [cpackage, landType, landSection];
+
       queryDefinitionExpression({
         queryExpression: queryc_lot.queryExpression(),
         featureLayer: [
@@ -125,8 +124,7 @@ const ChartLot = () => {
       const chartData = await pieChartStatusData({
         qChart: queryc_lot.queryExpression(),
         layer: lotLayer,
-        statusList: statusLotLabel,
-        statusColor: statusLotColor,
+        statusList: statusLotQuery, // statusLotLabel
         statusField: timesliderstate ? status_field : lotStatusField,
         statisticField: timesliderstate ? status_field : lotStatusField,
         statisticType: "count",

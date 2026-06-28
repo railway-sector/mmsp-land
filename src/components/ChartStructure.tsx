@@ -9,9 +9,7 @@ import {
 } from "../layers";
 import { thousands_separators } from "../query";
 import {
-  colorStructureHex,
   primaryLabelColor,
-  statusStructure,
   statusStructureField,
   statusStructureQuery,
   structureRemarksField,
@@ -72,8 +70,7 @@ const ChartStructure = memo(() => {
       const chartData = await pieChartStatusData({
         qChart: queryc_struc.queryExpression(),
         layer: structureLayer,
-        statusList: statusStructure,
-        statusColor: colorStructureHex,
+        statusList: statusStructureQuery, // statusStructure,
         statusField: statusStructureField,
         statisticField: statusStructureField,
         statisticType: "count",

@@ -3,7 +3,6 @@ import { isfLayer, queryc_isf } from "../layers";
 import { thousands_separators } from "../query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import {
-  colorIsf,
   primaryLabelColor,
   statusIsf,
   statusIsfField,
@@ -58,8 +57,7 @@ const ChartIsf = memo(() => {
       const chartData = await pieChartStatusData({
         qChart: queryc_isf.queryExpression(),
         layer: isfLayer,
-        statusList: statusIsf,
-        statusColor: colorIsf,
+        statusList: statusIsfQuery, //statusIsf,
         statusField: statusIsfField,
         statisticField: statusIsfField,
         statisticType: "count",
