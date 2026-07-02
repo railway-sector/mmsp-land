@@ -2,12 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useEffect, useRef, useState, memo } from "react";
 import {
+  piechart_struc,
   queryc_struc,
   queryc_struc2,
   queryc_struc3,
   structureLayer,
 } from "../layers";
-import { thousands_separators } from "../query";
+import { pieChartData, thousands_separators, fieldStatistic } from "../query";
 import {
   primaryLabelColor,
   statusStructureField,
@@ -17,7 +18,6 @@ import {
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import { chartRenderer } from "../chartRenderer";
-import { pieChartStatusData, fieldStatistic } from "../chartGenerator";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
@@ -67,10 +67,11 @@ const ChartStructure = memo(() => {
       });
 
       //--- Pie chart data
-      const chartData = await pieChartStatusData({
-        qChart: queryc_struc.queryExpression(),
+      const chartData = await pieChartData({
+        piechart: piechart_struc,
+        qChart: queryc_struc,
         layer: structureLayer,
-        statusList: statusStructureQuery, // statusStructure,
+        statusList: statusStructureQuery,
         statusField: statusStructureField,
         statisticField: statusStructureField,
         statisticType: "count",

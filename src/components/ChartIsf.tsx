@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, memo } from "react";
-import { isfLayer, queryc_isf } from "../layers";
-import { thousands_separators } from "../query";
+import { isfLayer, piechart_isf, queryc_isf } from "../layers";
+import { pieChartData, thousands_separators } from "../query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import {
   primaryLabelColor,
@@ -10,7 +10,6 @@ import {
   valueLabelColor,
 } from "../uniqueValues";
 import { chartRenderer } from "../chartRenderer";
-import { pieChartStatusData } from "../chartGenerator";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
@@ -54,8 +53,9 @@ const ChartIsf = memo(() => {
         featureLayer: [isfLayer],
       });
 
-      const chartData = await pieChartStatusData({
-        qChart: queryc_isf.queryExpression(),
+      const chartData = await pieChartData({
+        piechart: piechart_isf,
+        qChart: queryc_isf,
         layer: isfLayer,
         statusList: statusIsfQuery, //statusIsf,
         statusField: statusIsfField,
