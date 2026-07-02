@@ -1,1 +1,0 @@
-import{bI as r,bn as t,N as a}from"./index-CGzKO_Hd.js";function i(n){if(!n)return[];let e=r(n)?[n]:t.isCollection(n)?n.toArray():Array.isArray(n)?n:[];return e=e?.filter(a),(e?.length??0)===0?[]:e}function l(n){return!!(n&&typeof n=="object"&&"pixelRanges"in n&&n.pixelRanges)}function s(n){return Array.isArray(n.pixelRanges)&&n.pixelRanges.length===0}export{i,l as n,s as o};
