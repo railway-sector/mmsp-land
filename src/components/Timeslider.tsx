@@ -13,7 +13,8 @@ import type {
   TimeSliderState,
   DateFieldsType,
 } from "../interfaceKeys";
-import { updateLotSymbology } from "../timesliderQuery";
+import { updateLotSymbology } from "../queryTimeslider";
+import { yearMonthDay } from "../query";
 
 export default function Timeslider() {
   const arcgisMap = document.querySelector("arcgis-map");
@@ -67,9 +68,9 @@ export default function Timeslider() {
       () => timeSlider?.timeExtent,
       (timeExtent) => {
         if (timeExtent) {
-          const year = timeExtent.end.getFullYear();
-          const month = timeExtent.end.getMonth() + 1;
-          const day = timeExtent.end.getDate();
+          const year = yearMonthDay(timeExtent.end).year;
+          const month = yearMonthDay(timeExtent.end).month;
+          const day = yearMonthDay(timeExtent.end).day;
 
           //--- for 'As of' date in chart panel
           const c_month = timeExtent.end.toLocaleString("en-US", {

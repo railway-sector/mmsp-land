@@ -17,6 +17,7 @@ import "../index.css";
 import { useQuery } from "@tanstack/react-query";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation } from "../interfaceKeys";
+import { useMemo } from "react";
 
 //--- Zoom in to selected lot from expropriation list
 let highlightSelect: any;
@@ -29,7 +30,6 @@ async function resultClickHandler(event: any) {
   result.extent &&
     arcgisMap?.goTo({
       target: result.extent,
-      // speedFactor: 2,
       zoom: 17,
     });
 
@@ -76,20 +76,30 @@ const ListExpropriation = () => {
     },
   });
 
-  const exproItem = data
-    ? data.map((feature: any, index: number) => {
-        const attributes = feature.attributes;
-        return {
-          id: index,
-          lotid: attributes.Id,
-          cp: attributes.Package,
-          landtype: attributes.Type,
-          landowner: attributes.OWNER,
-          landsection: attributes.Station1,
-          objectid: attributes.OBJECTID,
-        };
-      })
-    : [];
+  const exproItem =
+    data &&
+    data.map((feature: any, index: number) => {
+      const attributes = feature.attributes;
+      return {
+        id: index,
+        lotid: attributes.Id,
+        cp: attributes.Package,
+        landtype: attributes.Type,
+        landowner: attributes.OWNER,
+        landsection: attributes.Station1,
+        objectid: attributes.OBJECTID,
+      };
+    });
+
+  //--- When exproItem is not changed, do not render
+  const uniqueExproItems = useMemo(() => {
+    if (!exproItem) return [];
+    const seen = new Map<any, any>();
+    for (const item of exproItem) {
+      if (!seen.has(item.objectid)) seen.set(item.objectid, item);
+    }
+    return [...seen.values()];
+  }, [exproItem]);
 
   return (
     <>
@@ -97,58 +107,44 @@ const ListExpropriation = () => {
         id="result-list"
         label="exproListLabel"
         displayMode="nested"
-        // style={{ width: chart_width }}
       >
-        {exproItem && // Extract unique objects from the array
-          exproItem
-            .filter(
-              (ele: any, ind: any) =>
-                ind ===
-                exproItem.findIndex(
-                  (elem: any) => elem.objectid === ele.objectid,
-                ),
-            )
-            .map((result: any) => {
-              return (
-                // need 'key' to upper div and inside CalciteListItem
-                <calcite-list-item
-                  key={result.id}
-                  expanded
-                  label={result.lotid}
-                  description={result.landowner}
-                  value={result.objectid}
-                  selected={undefined}
-                  oncalciteListItemSelect={(event: any) =>
-                    resultClickHandler(event)
-                  }
-                  style={{ "--calcite-list-label-text-color": "red" }}
-                >
-                  <calcite-chip
-                    value={result.cp}
-                    label={""}
-                    slot="content-end"
-                    scale="s"
-                    id="exproListChip"
-                  >
-                    <calcite-avatar
-                      full-name={result.landsection}
-                      scale="s"
-                      style={{ marginTop: "3px" }}
-                    ></calcite-avatar>
-                    <span
-                      style={{
-                        top: -7,
-                        bottom: 1,
-                        position: "relative",
-                        paddingLeft: "3px",
-                      }}
-                    >
-                      {result.cp}
-                    </span>
-                  </calcite-chip>
-                </calcite-list-item>
-              );
-            })}
+        {uniqueExproItems.map((result: any) => (
+          // need 'key' to upper div and inside CalciteListItem
+          <calcite-list-item
+            key={result.id}
+            expanded
+            label={result.lotid}
+            description={result.landowner}
+            value={result.objectid}
+            selected={undefined}
+            oncalciteListItemSelect={(event: any) => resultClickHandler(event)}
+            style={{ "--calcite-list-label-text-color": "red" }}
+          >
+            <calcite-chip
+              value={result.cp}
+              label={""}
+              slot="content-end"
+              scale="s"
+              id="exproListChip"
+            >
+              <calcite-avatar
+                full-name={result.landsection}
+                scale="s"
+                style={{ marginTop: "3px" }}
+              ></calcite-avatar>
+              <span
+                style={{
+                  top: -7,
+                  bottom: 1,
+                  position: "relative",
+                  paddingLeft: "3px",
+                }}
+              >
+                {result.cp}
+              </span>
+            </calcite-chip>
+          </calcite-list-item>
+        ))}
       </calcite-list>
     </>
   );

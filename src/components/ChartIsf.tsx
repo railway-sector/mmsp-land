@@ -9,7 +9,6 @@ import {
   statusIsfQuery,
   valueLabelColor,
 } from "../uniqueValues";
-import { chartRenderer } from "../chartRenderer";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +20,7 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
+import ChartPieSeriesRender from "chart-pie-series-render";
 
 /// Draw chart
 const ChartIsf = memo(() => {
@@ -38,7 +38,7 @@ const ChartIsf = memo(() => {
   const landSection = selectedLocation?.landSection;
 
   //--- 2. Streamlined Data Fetching with useQuery
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [cpackage, landType, landSection, statusIsfField],
     queryFn: async () => {
       queryc_isf.qValues = [
@@ -117,24 +117,27 @@ const ChartIsf = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    chartRenderer({
-      chart: chart,
-      pieSeries: pieSeries,
-      legend: legend,
-      root: root,
-      qChart: queryc_isf,
-      status_field: statusIsfField,
-      arcgisMap: arcgisMap,
-      updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      pieSeriesScale: new_pieSeriesScale,
-      pieInnerLabel: "FAMILIES",
-      pieInnerLabelFontSize: new_pieInnerLabelFontSize,
-      pieInnerValueFontSize: new_pieInnerValueFontSize,
-      layer: isfLayer,
-      statusArray: statusIsfQuery,
-      background_color_switch: false,
-    });
+    const crender = new ChartPieSeriesRender(
+      chart,
+      pieSeries,
+      legend,
+      root,
+      queryc_isf,
+      undefined,
+      statusIsfField,
+      arcgisMap?.view,
+      setChartPanelwidth,
+      chartData,
+      new_pieSeriesScale,
+      "FAMILIES",
+      new_pieInnerLabelFontSize,
+      new_pieInnerValueFontSize,
+      isfLayer,
+      statusIsfQuery,
+      false,
+      false,
+    );
+    crender.chartDataRenderer();
 
     return () => {
       root.dispose();
@@ -170,6 +173,7 @@ const ChartIsf = memo(() => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(totaln)}
@@ -184,6 +188,7 @@ const ChartIsf = memo(() => {
           height: "55vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
     </>

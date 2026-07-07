@@ -8,6 +8,11 @@ import "@esri/calcite-components/components/calcite-shell";
 import "@esri/calcite-components/components/calcite-navigation";
 import "@esri/calcite-components/components/calcite-navigation-logo";
 import type { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
+import "@arcgis/ai-components/components/arcgis-assistant";
+import "@arcgis/ai-components/components/arcgis-assistant-data-exploration-agent";
+import "@arcgis/ai-components/components/arcgis-assistant-navigation-agent"; // if you uncomment this below
+import "@arcgis/ai-components/components/arcgis-assistant-help-agent";
+
 import {
   accessRoadOptionsGroupLayer,
   alignmentLine,
@@ -29,16 +34,18 @@ import {
   datefieldKeys,
   dateDisplayKeys,
 } from "../interfaceKeys";
-import { dateUpdate } from "../query";
 import type {
   TimesliderFieldsTypes,
   DateFieldsType,
   DisplayDates,
 } from "../interfaceKeys";
-import { getSortDates } from "../timesliderQuery";
+import { getSortDates } from "../queryTimeslider";
+import { dateUpdate } from "../query";
 
 export default function MapDisplay() {
   const queryClient = useQueryClient();
+
+  // 1. Use React Refs instead of document.querySelector
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
 
@@ -88,6 +95,9 @@ export default function MapDisplay() {
 
   //--- Add layers to scene view
   arcgisMap?.viewOnReady(() => {
+    // const assistant: any = document.querySelector("arcgis-assistant");
+    // assistant.view = arcgisMap?.view;
+
     arcgisMap?.map?.add(lotGroupLayer);
     arcgisMap?.map?.add(depotBuildingsGroupLayer);
     arcgisMap?.map?.add(evsBoundaryPoGroupLayer);
@@ -130,6 +140,7 @@ export default function MapDisplay() {
   return (
     <>
       <arcgis-map
+        // item-id="0cb9e3756b45406c9c8b73bbbc91a22f"
         id="test-map"
         basemap="dark-gray-vector"
         ground="world-elevation"
@@ -145,6 +156,10 @@ export default function MapDisplay() {
         </arcgis-expand>
         <arcgis-zoom slot="bottom-right"></arcgis-zoom>
         <arcgis-locate slot="top-right"></arcgis-locate>
+
+        {/* <arcgis-assistant>
+          <arcgis-assistant-navigation-agent></arcgis-assistant-navigation-agent>
+        </arcgis-assistant> */}
       </arcgis-map>
     </>
   );

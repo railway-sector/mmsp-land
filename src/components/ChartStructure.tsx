@@ -17,7 +17,6 @@ import {
   valueLabelColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
-import { chartRenderer } from "../chartRenderer";
 import { locationKeys } from "../interfaceKeys";
 import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +29,7 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
+import ChartPieSeriesRender from "chart-pie-series-render";
 
 /// Draw chart
 const ChartStructure = memo(() => {
@@ -47,7 +47,7 @@ const ChartStructure = memo(() => {
   const landSection = selectedLocation?.landSection;
 
   //--- 2. Streamlined Data Fetching with useQuery
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [
       cpackage,
       landType,
@@ -160,25 +160,27 @@ const ChartStructure = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    chartRenderer({
-      chartItem: "structure",
-      chart: chart,
-      pieSeries: pieSeries,
-      legend: legend,
-      root: root,
-      qChart: queryc_struc,
-      status_field: statusStructureField,
-      arcgisMap: arcgisMap,
-      updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      pieSeriesScale: new_pieSeriesScale,
-      pieInnerLabel: "STRUCTURES",
-      pieInnerLabelFontSize: new_pieInnerLabelFontSize,
-      pieInnerValueFontSize: new_pieInnerValueFontSize,
-      layer: structureLayer,
-      statusArray: statusStructureQuery,
-      background_color_switch: false,
-    });
+    const crender = new ChartPieSeriesRender(
+      chart,
+      pieSeries,
+      legend,
+      root,
+      queryc_struc,
+      undefined,
+      statusStructureField,
+      arcgisMap?.view,
+      setChartPanelwidth,
+      chartData,
+      new_pieSeriesScale,
+      "STRUCTURES",
+      new_pieInnerLabelFontSize,
+      new_pieInnerValueFontSize,
+      structureLayer,
+      statusStructureQuery,
+      false,
+      true,
+    );
+    crender.chartDataRenderer();
 
     return () => {
       root.dispose();
@@ -214,6 +216,7 @@ const ChartStructure = memo(() => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(totaln)}
@@ -228,6 +231,7 @@ const ChartStructure = memo(() => {
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginBottom: "7%",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
 
@@ -254,6 +258,7 @@ const ChartStructure = memo(() => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {percDemolish_n}% ({thousands_separators(demolished_n)})

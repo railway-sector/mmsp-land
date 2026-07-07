@@ -21,7 +21,7 @@ import type {
   DisplayDates,
   TimeSliderState,
 } from "../interfaceKeys";
-import { updateLotSymbology } from "../timesliderQuery";
+import { updateLotSymbology } from "../queryTimeslider";
 
 function ActionPanel() {
   const queryClient = useQueryClient();

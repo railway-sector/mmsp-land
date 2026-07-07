@@ -28,7 +28,7 @@ import {
   white_bkColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
-import { chartRenderer } from "../chartRenderer";
+// import { chartRenderer } from "../chartRenderer";
 import { useQuery } from "@tanstack/react-query";
 import {
   timesliderFieldKeys,
@@ -51,6 +51,7 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
+import ChartPieSeriesRender from "chart-pie-series-render";
 
 const ChartLot = () => {
   const { updateBkColor } = use(MyContext);
@@ -100,8 +101,11 @@ const ChartLot = () => {
   });
   const timesliderstate = time?.timesliderstate;
 
+  //--- New status field by timeslider state
+  const stats_field = timesliderstate ? status_field : lotStatusField;
+
   //--- 2. Streamlined Data Fetching with useQuery
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [
       cpackage,
       landType,
@@ -131,8 +135,8 @@ const ChartLot = () => {
         qChart: queryc_lot,
         layer: lotLayer,
         statusList: statusLotQuery,
-        statusField: timesliderstate ? status_field : lotStatusField,
-        statisticField: timesliderstate ? status_field : lotStatusField,
+        statusField: stats_field,
+        statisticField: stats_field,
         statisticType: "count",
       });
 
@@ -239,24 +243,29 @@ const ChartLot = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    chartRenderer({
-      chart: chart,
-      pieSeries: pieSeries,
-      legend: legend,
-      root: root,
-      qChart: queryc_lot,
-      status_field: timesliderstate ? status_field : lotStatusField,
-      arcgisMap: arcgisMap,
-      updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      pieSeriesScale: new_pieSeriesScale,
-      pieInnerLabel: "PRIVATE LOTS",
-      pieInnerLabelFontSize: new_pieInnerLabelFontSize,
-      pieInnerValueFontSize: new_pieInnerValueFontSize,
-      layer: lotLayer,
-      statusArray: statusLotQuery,
-      background_color_switch: bkcolorSwitch,
-    });
+    //
+    const crender = new ChartPieSeriesRender(
+      chart,
+      pieSeries,
+      legend,
+      root,
+      queryc_lot,
+      undefined,
+      stats_field,
+      arcgisMap?.view,
+      setChartPanelwidth,
+      chartData,
+      new_pieSeriesScale,
+      "PRIVATE LOTS",
+      new_pieInnerLabelFontSize,
+      new_pieInnerValueFontSize,
+      lotLayer,
+      statusLotQuery,
+      bkcolorSwitch,
+      false,
+    );
+    crender.chartDataRenderer();
+
     return () => {
       root.dispose();
     };
@@ -294,6 +303,7 @@ const ChartLot = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(lotNumber)}
@@ -318,6 +328,7 @@ const ChartLot = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(public_lotn)}
@@ -343,6 +354,7 @@ const ChartLot = () => {
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
           marginBottom: "3%",
+          opacity: isLoading ? 0 : 1,
         }}
       ></div>
 
@@ -368,6 +380,7 @@ const ChartLot = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {perc_handedOver}% ({thousands_separators(total_handedOver)})
@@ -387,6 +400,7 @@ const ChartLot = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {perce_tobe_handedOver}% (

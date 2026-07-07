@@ -7,33 +7,33 @@ import Query from "@arcgis/core/rest/support/Query";
 //----------------------------------------//
 //------        Date and Month       -----//
 //----------------------------------------//
-export async function dateUpdate() {
-  const query = dateTable.createQuery();
-  query.where = `category = 'Land Acquisition'`;
+// export async function dateUpdate() {
+//   const query = dateTable.createQuery();
+//   query.where = `category = 'Land Acquisition'`;
 
-  const response = await dateTable.queryFeatures(query);
-  const dates = response.features.map((result: any) => {
-    // get today and date recorded in the table
-    const today = new Date();
-    const date = new Date(result.attributes.date);
+//   const response = await dateTable.queryFeatures(query);
+//   const dates = response.features.map((result: any) => {
+//     // get today and date recorded in the table
+//     const today = new Date();
+//     const date = new Date(result.attributes.date);
 
-    // Calculate the number of days passed since the last update
-    const time_passed = today.getTime() - date.getTime();
-    const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
+//     // Calculate the number of days passed since the last update
+//     const time_passed = today.getTime() - date.getTime();
+//     const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
 
-    const year = date.getFullYear();
-    const month = date.toLocaleString("en-US", {
-      month: "long",
-    });
-    const day = date.getDate();
-    const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
-    return [as_of_date, days_passed, date];
-  });
-  return dates;
-}
+//     const year = date.getFullYear();
+//     const month = date.toLocaleString("en-US", {
+//       month: "long",
+//     });
+//     const day = date.getDate();
+//     const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
+//     return [as_of_date, days_passed, date];
+//   });
+//   return dates;
+// }
 
 //---------------------------------------------//
-//           Lot Pie chart                     //
+//           Pie chart                     //
 //---------------------------------------------//
 // 'piechart' = constant declared from class ChartPieSeries in layers.ts
 interface pieChartDataType {
@@ -91,6 +91,42 @@ export async function fieldStatistic({
   return layer?.queryFeatures(query).then((response: any) => {
     return response.features[0].attributes.statsCollect;
   });
+}
+
+//----------------------------------------//
+//------        Date and Month       -----//
+//----------------------------------------//
+export function yearMonthDay(date: Date) {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
+}
+
+//--- Update date
+export async function dateUpdate() {
+  const query = dateTable.createQuery();
+  query.where = ` category = 'Land Acquisition'`;
+
+  const response = await dateTable.queryFeatures(query);
+  const dates = response.features.map((result: any) => {
+    const today = new Date();
+    const date = new Date(result.attributes.date);
+
+    //-- Calculate the number of days passed since the last update
+    const time_passed = today.getTime() - date.getTime();
+    const days_passed = Math.round(time_passed / (1000 * 3600 * 24));
+
+    const year = yearMonthDay(date).year;
+    const month = date.toLocaleString("en-US", {
+      month: "long",
+    });
+    const day = yearMonthDay(date).day;
+    const as_of_date = year < 1990 ? "" : `${month} ${day}, ${year}`;
+    return [as_of_date, days_passed, date];
+  });
+  return dates;
 }
 
 //----------------------------------------------//
