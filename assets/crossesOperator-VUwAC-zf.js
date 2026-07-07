@@ -1,0 +1,1 @@
+import{t as n}from"./OperatorCrosses-yLKMJa7D.js";import{l0 as r,l5 as c}from"./index-CKtg3Ujk.js";const s=new n;function m(t,o){const e=r(t);return s.execute(e.getGeometry(),c(o),e.getSpatialReference(),null)}export{m as execute};

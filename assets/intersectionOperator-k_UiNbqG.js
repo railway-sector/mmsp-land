@@ -1,0 +1,1 @@
+import{l0 as s,l1 as r,l5 as n,l3 as u,aI as i}from"./index-CKtg3Ujk.js";import{execute as f,executeMany as l}from"./operatorIntersection-CoDfNjte.js";function x(a,c){const t=s(a),e=t.getSpatialReference();return r(f(t.getGeometry(),n(c),e),e)}function y(a,c){const[t,e]=u(a);return l(t,n(c),e,7).map(o=>r(o,e)).filter(i)}export{x as execute,y as executeMany};

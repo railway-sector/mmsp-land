@@ -1,1 +1,0 @@
-import{kY as a,a4 as u}from"./index-B5CEZo53.js";const n=new a;function f(e,t){return n.accelerateGeometry(e,t,1)}function l(e,t,r){return n.execute(e,t,r,null)}function m(e,t,r,s){const o=n.executeMany(new u(e),new u([t]),r,null,s);return Array.from(o)}function p(){return n.supportsCurves()}export{f as accelerateGeometry,l as execute,m as executeMany,p as supportsCurves};

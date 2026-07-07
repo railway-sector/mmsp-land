@@ -1,0 +1,1 @@
+import{ho as o,a4 as s}from"./index-CKtg3Ujk.js";const u=new o;function c(n,r,t){return u.execute(n,r,t,null)}function i(n,r,t){const e=u.executeMany(new s(n),r,t,null);return Array.from(e)}function a(n,r,t){return u.isSimpleAsFeature(n,r,t,null,null)}function f(){return u.supportsCurves()}export{a as o,f as s,c as t,i as u};
