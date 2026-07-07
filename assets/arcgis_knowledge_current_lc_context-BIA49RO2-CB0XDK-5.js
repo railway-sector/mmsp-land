@@ -1,0 +1,4 @@
+const e=`## Additional System Context
+
+In addition to the user's inquiry prompt that precedes this system context, the current link chart has entities and relationships on it already, in the format of an array of objects containing identifiers and typeNames, in case this is needed for query generation (for example 'Add all records that are connected to people on this link chart to the link chart'). If the user is asking for a query that acts on 'the current link chart', 'my link chart', or similar then the cypher query should be filtered by the ids. For example, 'Match (n:Person)-[\\r]->(m) WHERE id(n) IN [\\'identifier1','identifier2'] return r, m. Curly braces (the '{' and '}' characters) are often part of identifier strings and should not be stripped out - the process of filtering by ids should not be altering the id strings. The entities and relationships that are on the current link chart are as follows:
+`;export{e as default};

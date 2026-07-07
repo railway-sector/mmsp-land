@@ -1,0 +1,1 @@
+import{l0 as r,l1 as s,mL as c,l5 as o,l3 as u,mM as l}from"./index-B5CEZo53.js";function p(t,a){const e=r(t),n=e.getSpatialReference();return s(c(e.getGeometry(),o(a),n),n)}function f(t){const[a,e]=u(t);return s(l(a,e),e)}export{p as execute,f as executeMany};
