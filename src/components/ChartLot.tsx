@@ -187,6 +187,9 @@ const ChartLot = () => {
         perc_tobe_ho: perc_tob_ho,
       };
     },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     // staleTime: Infinity,
   });
   const chartData = data?.chartData || [];
