@@ -1,116 +1,72 @@
 import "@arcgis/map-components/components/arcgis-time-slider";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  timesliderFieldKeys,
-  dateDisplayKeys,
-  timesliderKeys,
-  datefieldKeys,
-} from "../interfaceKeys";
-import type {
-  TimesliderFieldsTypes,
-  DisplayDates,
-  TimeSliderState,
-  DateFieldsType,
-} from "../interfaceKeys";
-import { updateLotSymbology } from "../queryTimeslider";
-import { yearMonthDay } from "../query";
+  toAsofdate,
+  toDateList,
+  updateLotSymbology,
+  useDateFields,
+  yearMonthDay,
+} from "../query";
+import { use } from "react";
+import { MyContext } from "../contexts/MyContext";
+import { lotLayer } from "../layers";
 
 export default function Timeslider() {
+  const {
+    updateAsofdate,
+    updateTimesliderOn,
+    updateNewStatusField,
+    updateNewJvField,
+    updateNewNyField,
+  } = use(MyContext);
+
   const arcgisMap = document.querySelector("arcgis-map");
-  const queryClient = useQueryClient();
 
-  //--- Update timeslider state
-  const handletimesliderStateChange = () => {
-    const updatedTimesliderState: TimeSliderState = {
-      timesliderstate: true,
-    };
+  //---------------------------------------------
+  //  Call date list for the time slider
+  //---------------------------------------------
+  const { data: dateList } = useDateFields(lotLayer);
 
-    queryClient.setQueryData<TimeSliderState>(
-      timesliderKeys.selected,
-      updatedTimesliderState,
-    );
-  };
-
-  //-- Date Fields
-  const { data: dateField } = useQuery<DateFieldsType | any>({
-    queryKey: datefieldKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const latestasofdate = dateField?.latestasofdate;
-
+  //------------------------------------
+  //     Activate time slider
+  //------------------------------------
   arcgisMap?.viewOnReady(() => {
     const timeSlider: any = document.querySelector("arcgis-time-slider");
 
-    const dateCollect: any = [];
-    dateField?.dateFields.map((date: any) => {
-      const yyyy = Number(date.slice(1, 5));
-      const desired_mm = Number(date.slice(5, 7));
-      const dd = Number(date.slice(7, 9));
-      const mm = desired_mm - 1;
-      const final = new Date(yyyy, mm, dd);
-      dateCollect.push(final);
-    });
+    if (!dateList) return;
+    const datesObj: any = dateList && toDateList(dateList?.dateFields);
 
-    const updatedDateCollect = [...dateCollect.slice(0, -1), latestasofdate];
-
+    //--- Define start and end dates of time-slider
     timeSlider.fullTimeExtent = {
-      start: dateCollect[0],
-      end: latestasofdate,
+      start: datesObj[0],
+      end: datesObj.at(-1),
     };
 
-    timeSlider.stops = {
-      dates: updatedDateCollect,
-    };
+    //--- Define timestamps where the slider stops.
+    timeSlider.stops = { dates: datesObj };
 
     reactiveUtils.watch(
       () => timeSlider?.timeExtent,
       (timeExtent) => {
-        if (timeExtent) {
-          const year = yearMonthDay(timeExtent.end).year;
-          const month = yearMonthDay(timeExtent.end).month;
-          const day = yearMonthDay(timeExtent.end).day;
+        if (!timeExtent) return;
 
-          //--- for 'As of' date in chart panel
-          const c_month = timeExtent.end.toLocaleString("en-US", {
-            month: "long",
-          });
+        //--- Extract year, month, and day
+        const { year, month, day } = yearMonthDay(timeExtent.end);
 
-          queryClient.setQueryData<DisplayDates | any>(
-            dateDisplayKeys.selected,
-            {
-              asOfDate: `${c_month} ${day}, ${year}`,
-            },
-          );
+        //--- Update asOfDate
+        updateAsofdate(toAsofdate(timeExtent.end));
 
-          //--- Updating status and date fields for time slider:
-          const yyyy0mdd = `x${year}0${month}${day}`;
-          const yyyymmdd = `x${year}${month}${day}`;
-          const yyyymm0d = `x${year}${month}0${day}`;
-          const yyyy0m0d = `x${year}0${month}0${day}`;
+        //--- Update date fields for time slider:
+        const mm = String(month).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        const new_date_field = `x${year}${mm}${dd}`;
 
-          const new_date_field =
-            month <= 9 && day <= 9
-              ? yyyy0m0d
-              : month <= 9 && day >= 10
-                ? yyyy0mdd
-                : month >= 10 && day <= 9
-                  ? yyyymm0d
-                  : yyyymmdd;
+        //--- Update date fields changed with time stapms
+        updateNewStatusField(`${new_date_field}_NVS`);
+        updateNewJvField(`${new_date_field}_JV`);
+        updateNewNyField(`${new_date_field}_NY`);
 
-          const new_status_field = `${new_date_field}_NVS`;
-          queryClient.setQueryData<TimesliderFieldsTypes>(
-            timesliderFieldKeys.selected,
-            {
-              statusdateField: new_status_field,
-              newHandedOverJVfield: `${new_date_field}_JV`,
-              newHandedoverNYfield: `${new_date_field}_NY`,
-            },
-          );
-
-          updateLotSymbology(new_status_field);
-        }
+        updateLotSymbology(`${new_date_field}_NVS`);
       },
     );
     // });
@@ -127,7 +83,7 @@ export default function Timeslider() {
           slot="bottom"
           layout="auto"
           mode="cumulative-from-start"
-          onarcgisPropertyChange={handletimesliderStateChange}
+          onarcgisPropertyChange={() => updateTimesliderOn(true)}
         ></arcgis-time-slider>
       </div>
     </>

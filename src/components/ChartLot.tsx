@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useMemo, useRef, useState } from "react";
 import {
   handedOverLotLayer,
   lotLayer,
-  piechart,
   publicLotLayer,
-  queryc_lot,
   subterraenanLots18_layer,
   tobeHandedOverLotLayer,
 } from "../layers";
@@ -14,36 +12,31 @@ import {
   thousands_separators,
   zoomToLayer,
   fieldStatistic,
+  useDateFields,
+  toAsofdate,
+  makeQuery,
+  PieChartRender,
 } from "../query";
 import "@esri/calcite-components/components/calcite-checkbox";
 import "@esri/calcite-components/components/calcite-label";
 import {
-  default_bkColor,
-  handedOverField,
-  lot_id_field,
-  lotStatusField,
-  primaryLabelColor,
-  statusLotQuery,
-  tobeHandedOverField,
+  cp_f,
+  dark_bkColor,
+  labelColor,
+  lot_ho_f,
+  lot_id_f,
+  lot_section_f,
+  lot_status_f,
+  lot_status_q,
+  lot_type_f,
+  lot_xho_f,
+  valueColor,
   white_bkColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 // import { chartRenderer } from "../chartRenderer";
 import { useQuery } from "@tanstack/react-query";
-import {
-  timesliderFieldKeys,
-  locationKeys,
-  dateDisplayKeys,
-  timesliderKeys,
-} from "../interfaceKeys";
-import type {
-  SelectedLocation,
-  TimesliderFieldsTypes,
-  ChartResponse,
-  DisplayDates,
-  TimeSliderState,
-} from "../interfaceKeys";
-import { MyContext } from "./ChartMain";
+import type { ChartResponse } from "../interfaceKeys";
 import { queryDefinitionExpression } from "../queryDefinition";
 import {
   chartSetter,
@@ -52,74 +45,68 @@ import {
   seriesSetter,
 } from "../chartSetter";
 import ChartPieSeriesRender from "chart-pie-series-render";
+import { MyContext } from "../contexts/MyContext";
+import ChartPieSeries from "chart-pie-series";
 
 const ChartLot = () => {
-  const { updateBkColor } = use(MyContext);
+  const {
+    asofdate,
+    timesliderOn,
+    newStatusField,
+    newJvField,
+    newNyField,
+    cpackage,
+    landtype,
+    landsection,
+    updateBkColor,
+  } = use(MyContext);
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
-  const [bkcolorSwitch, setBkcolorSwitch] = useState<boolean>(false);
-  const [labelColor, setLabelColor] = useState<any>(primaryLabelColor);
+  const [isbkSwitch, setIsBkSwitch] = useState<boolean>(false);
+  const firstLoad = useRef<boolean>(true);
+
+  //--- Initial date to display
+  const { data: dateList } = useDateFields(lotLayer);
+  const latestDate = toAsofdate(dateList?.latestdate);
 
   //--- Update background color
   useEffect(() => {
-    updateBkColor(bkcolorSwitch ? white_bkColor : default_bkColor);
-    setLabelColor(bkcolorSwitch ? default_bkColor : primaryLabelColor);
-  }, [bkcolorSwitch]);
+    updateBkColor(isbkSwitch ? white_bkColor : dark_bkColor);
+  }, [isbkSwitch]);
 
-  //--- 0. As of date
-  const { data: newAsOfDate } = useQuery<DisplayDates | any>({
-    queryKey: dateDisplayKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
+  //--- Update label & vale color
+  const label_col = useMemo(
+    () => (isbkSwitch ? dark_bkColor : labelColor),
+    [isbkSwitch],
+  );
 
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const cpackage = selectedLocation?.cpackage;
-  const landType = selectedLocation?.landType;
-  const landSection = selectedLocation?.landSection;
-
-  //--- Updated fields for timeslider
-  const { data: newStates } = useQuery<TimesliderFieldsTypes | any>({
-    queryKey: timesliderFieldKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const status_field = newStates?.statusdateField;
-  const ho_JVfield = newStates?.newHandedOverJVfield;
-  const ho_NYfield = newStates?.newHandedoverNYfield;
-
-  //--- timeslider state
-  const { data: time } = useQuery<TimeSliderState | any>({
-    queryKey: timesliderKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const timesliderstate = time?.timesliderstate;
+  const value_col = useMemo(
+    () => (isbkSwitch ? dark_bkColor : valueColor),
+    [isbkSwitch],
+  );
 
   //--- New status field by timeslider state
-  const stats_field = timesliderstate ? status_field : lotStatusField;
+  const stats_field = timesliderOn ? newStatusField : lot_status_f;
 
-  //--- 2. Streamlined Data Fetching with useQuery
+  //--- Common qValues and qFields for QueryExpressionLayers class
+  const qV = [cpackage, landtype, landsection];
+  const qF = [cp_f, lot_type_f, lot_section_f];
+  const queryc = makeQuery(qV, qF);
+
+  //--- Generate chart data
   const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [
       cpackage,
-      landType,
-      landSection,
-      lotStatusField,
-      status_field,
-      timesliderstate,
+      landtype,
+      landsection,
+      newStatusField,
+      lot_status_f,
+      timesliderOn,
       lotLayer,
     ],
     queryFn: async () => {
-      queryc_lot.qValues = [cpackage, landType, landSection];
-
       queryDefinitionExpression({
-        queryExpression: queryc_lot.queryExpression(),
+        queryExpression: queryc.queryExpression(),
         featureLayer: [
           lotLayer,
           handedOverLotLayer,
@@ -129,40 +116,42 @@ const ChartLot = () => {
         ],
       });
 
-      //--- chart data
-      const chartData = await pieChartData({
-        piechart: piechart,
-        qChart: queryc_lot,
-        layer: lotLayer,
-        statusList: statusLotQuery,
-        statusField: stats_field,
-        statisticField: stats_field,
-        statisticType: "count",
-      });
+      const [chartData, totaln, total_ho, total_tobe_ho] = await Promise.all([
+        //--- chart data
+        pieChartData({
+          piechart: new ChartPieSeries(),
+          qChart: queryc,
+          layer: lotLayer,
+          statusList: lot_status_q,
+          statusField: stats_field,
+          statisticField: stats_field,
+          statisticType: "count",
+        }),
 
-      //--- total number of lots (public + private)
-      const totaln = await fieldStatistic({
-        qChart: queryc_lot.queryExpression(),
-        layer: lotLayer,
-        statisticField: lot_id_field,
-        statisticType: "count",
-      });
+        //--- total number of lots (public + private)
+        fieldStatistic({
+          qChart: queryc.queryExpression(),
+          layer: lotLayer,
+          statisticField: lot_id_f,
+          statisticType: "count",
+        }),
 
-      //--- Number of handed-over lots (GC to JV)
-      const total_ho = await fieldStatistic({
-        qChart: queryc_lot.queryExpression(),
-        layer: lotLayer,
-        statisticField: timesliderstate ? ho_JVfield : handedOverField,
-        statisticType: "sum",
-      });
+        //--- Number of handed-over lots (GC to JV)
+        fieldStatistic({
+          qChart: queryc.queryExpression(),
+          layer: lotLayer,
+          statisticField: timesliderOn ? newJvField : lot_ho_f,
+          statisticType: "sum",
+        }),
 
-      //--- Number of To-be-handed-over lots (to JV)
-      const total_tobe_ho = await fieldStatistic({
-        qChart: queryc_lot.queryExpression(),
-        layer: lotLayer,
-        statisticField: timesliderstate ? ho_NYfield : tobeHandedOverField,
-        statisticType: "sum",
-      });
+        //--- Number of To-be-handed-over lots (to JV)
+        fieldStatistic({
+          qChart: queryc.queryExpression(),
+          layer: lotLayer,
+          statisticField: timesliderOn ? newNyField : lot_xho_f,
+          statisticType: "sum",
+        }),
+      ]);
 
       //--- Public lot number
       const public_lotn = totaln - chartData[1];
@@ -173,9 +162,11 @@ const ChartLot = () => {
       //--- Percent to-be-handed-over
       const perc_tob_ho = ((total_tobe_ho / totaln) * 100).toFixed(1);
 
-      if (!timesliderstate) {
-        zoomToLayer(lotLayer, arcgisMap);
+      //--- Only zoom on subsequent (non-initial) fetches
+      if (!firstLoad.current) {
+        if (!timesliderOn) zoomToLayer(lotLayer, arcgisMap);
       }
+      firstLoad.current = false;
 
       return {
         chartData: chartData[0] || [],
@@ -201,9 +192,9 @@ const ChartLot = () => {
   const perce_tobe_handedOver = data?.perc_tobe_ho || 0;
 
   // Chart Resize parameters
-  const new_fontSize = chartPanelwidth / 22.3;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_imageSize = chartPanelwidth * 0.028;
+  const new_fontSize = chartPanelwidth / 28;
+  const new_valueSize = chartPanelwidth / 16;
+  const new_imageSize = chartPanelwidth * 0.026;
   // const new_asofDateSize = chartPanelwidth * 0.032;
   const new_pieSeriesScale = 220;
   const new_pieInnerValueFontSize = "1.1rem";
@@ -215,10 +206,7 @@ const ChartLot = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "pie-two";
 
-  // 1. Pie Chart for Land Acquisition
   useEffect(() => {
-    // maybeDisposeRoot(chartID);
-
     const root = rootSetter({ chartID: chartID });
     const chart = chartSetter(root);
     chartRef.current = chart;
@@ -246,33 +234,33 @@ const ChartLot = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    //
-    const crender = new ChartPieSeriesRender(
+    // chart renderer
+    PieChartRender({
+      render: new ChartPieSeriesRender(),
       chart,
-      pieSeries,
+      pieSeries: pieSeries,
       legend,
       root,
-      queryc_lot,
-      undefined,
-      stats_field,
-      arcgisMap?.view,
-      setChartPanelwidth,
-      chartData,
-      new_pieSeriesScale,
-      "PRIVATE LOTS",
-      new_pieInnerLabelFontSize,
-      new_pieInnerValueFontSize,
-      lotLayer,
-      statusLotQuery,
-      bkcolorSwitch,
-      false,
-    );
-    crender.chartDataRenderer();
+      qChart: queryc,
+      q2Expression: undefined,
+      status_field: stats_field,
+      view: arcgisMap?.view,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
+      seriesScale: new_pieSeriesScale,
+      innerLabel: "PRIVATE LOTS",
+      innerLabelFontSize: new_pieInnerLabelFontSize,
+      innerValueFontSize: new_pieInnerValueFontSize,
+      layer: lotLayer,
+      statusArray: lot_status_q,
+      bkg_color_switch: isbkSwitch,
+      seriesFillHash: undefined,
+    });
 
     return () => {
       root.dispose();
     };
-  }, [chartID, chartData, bkcolorSwitch]);
+  }, [chartID, chartData, isbkSwitch]);
 
   useEffect(() => {
     pieSeriesRef.current?.data.setAll(chartData);
@@ -283,30 +271,30 @@ const ChartLot = () => {
     <>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <img
-          src="https://EijiGorilla.github.io/Symbols/Land_logo.png"
+          src="https://eijigorilla.github.io/Symbols/Land_Acquisition/Land_Logo2.png"
           alt="Land Logo"
           height={`${new_imageSize}%`}
           width={`${new_imageSize}%`}
-          style={{ marginTop: "15px", marginLeft: "20px" }}
+          style={{
+            paddingTop: "1%",
+            paddingLeft: "4%",
+            opacity: isLoading ? 0 : 1,
+          }}
         />
         <dl style={{ alignItems: "center" }}>
-          <dt
-            style={{
-              color: labelColor,
-              fontSize: `${new_fontSize}px`,
-            }}
-          >
+          <dt style={{ color: label_col, fontSize: `${new_fontSize}px` }}>
             TOTAL LOTS
           </dt>
           <dd
             style={{
-              color: labelColor,
+              color: value_col,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {thousands_separators(lotNumber)}
@@ -314,24 +302,20 @@ const ChartLot = () => {
         </dl>
 
         {/* Public Lot Number */}
-        <dl style={{ alignItems: "center", marginRight: "20px" }}>
-          <dt
-            style={{
-              color: labelColor,
-              fontSize: `${new_fontSize}px`,
-            }}
-          >
+        <dl style={{ alignItems: "center", marginRight: "6%" }}>
+          <dt style={{ color: label_col, fontSize: `${new_fontSize}px` }}>
             PUBLIC LOTS
           </dt>
           <dd
             style={{
-              color: labelColor,
+              color: value_col,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {thousands_separators(public_lotn)}
@@ -339,13 +323,8 @@ const ChartLot = () => {
         </dl>
       </div>
 
-      <div
-        style={{
-          float: "right",
-          marginRight: "5px",
-        }}
-      >
-        {!newAsOfDate?.asOfDate ? "" : "As of " + newAsOfDate?.asOfDate}
+      <div style={{ color: value_col, float: "right", marginRight: "5px" }}>
+        {asofdate ? `As of ${asofdate}` : `As of ${latestDate}`}
       </div>
 
       {/* Lot Chart */}
@@ -356,6 +335,7 @@ const ChartLot = () => {
           height: "55vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
+          marginTop: "4%",
           marginBottom: "3%",
           opacity: isLoading ? 0 : 1,
         }}
@@ -366,24 +346,24 @@ const ChartLot = () => {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          marginLeft: "20px",
-          marginRight: "20px",
+          marginLeft: "2%",
+          marginRight: "2%",
         }}
       >
         <dl style={{ justifyContent: "space-between" }}>
-          <dt style={{ color: labelColor, fontSize: `${new_fontSize}px` }}>
-            <div style={{ marginBottom: "5px" }}>Handed Over</div>
-            <div style={{ fontSize: "1.0rem" }}>(GC to JV)</div>
+          <dt style={{ color: label_col, fontSize: `${new_fontSize}px` }}>
+            <div style={{ marginBottom: "5px" }}>HANDED-OVER (GC to JV)</div>
           </dt>
           <dd
             style={{
-              color: labelColor,
+              color: value_col,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {perc_handedOver}% ({thousands_separators(total_handedOver)})
@@ -391,19 +371,19 @@ const ChartLot = () => {
         </dl>
 
         <dl style={{ justifyContent: "space-between" }}>
-          <dt style={{ color: labelColor, fontSize: `${new_fontSize}px` }}>
-            <div style={{ marginBottom: "5px" }}>To be Handed Over</div>
-            <div style={{ fontSize: "1.0rem" }}>(to JV)</div>
+          <dt style={{ color: label_col, fontSize: `${new_fontSize}px` }}>
+            <div style={{ marginBottom: "5px" }}>TO BE HANDED-OVER (to JV)</div>
           </dt>
           <dd
             style={{
-              color: labelColor,
+              color: value_col,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
               opacity: isLoading ? 0 : 1,
+              textAlign: "center",
             }}
           >
             {perce_tobe_handedOver}% (
@@ -414,18 +394,18 @@ const ChartLot = () => {
       {/* switch white and black background */}
       <div
         style={{
-          color: labelColor,
+          color: label_col,
           fontSize: "12px",
           display: "flex",
           justifyContent: "flex-end",
-          marginRight: "10px",
-          marginLeft: "10px",
+          marginRight: "3%",
+          marginTop: "1%",
         }}
       >
         <span style={{ marginRight: "5px" }}>BLK BG</span>
         <calcite-switch
           oncalciteSwitchChange={(event: any) =>
-            setBkcolorSwitch(event.target.checked)
+            setIsBkSwitch(event.target.checked)
           }
         ></calcite-switch>{" "}
         <span style={{ marginLeft: "5px" }}>WHT BG</span>

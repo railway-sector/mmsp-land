@@ -1,24 +1,26 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { useEffect, useRef, useState, memo } from "react";
+import { useEffect, useRef, useState, memo, use } from "react";
+import { structureLayer } from "../layers";
 import {
-  piechart_struc,
-  queryc_struc,
-  queryc_struc2,
-  queryc_struc3,
-  structureLayer,
-} from "../layers";
-import { pieChartData, thousands_separators, fieldStatistic } from "../query";
+  pieChartData,
+  thousands_separators,
+  fieldStatistic,
+  makeQuery,
+  PieChartRender,
+} from "../query";
 import {
-  primaryLabelColor,
-  statusStructureField,
-  statusStructureQuery,
-  structureRemarksField,
-  valueLabelColor,
+  cp_f,
+  lot_section_f,
+  lot_type_f,
+  valueColor,
+  str_remarks_f,
+  str_status_f,
+  str_status_q,
+  labelColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
+import type { ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
 import { queryDefinitionExpression } from "../queryDefinition";
 import {
@@ -30,72 +32,60 @@ import {
   seriesSetter,
 } from "../chartSetter";
 import ChartPieSeriesRender from "chart-pie-series-render";
+import { MyContext } from "../contexts/MyContext";
+import ChartPieSeries from "chart-pie-series";
 
 /// Draw chart
 const ChartStructure = memo(() => {
+  const { cpackage, landtype, landsection } = use(MyContext);
+
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const cpackage = selectedLocation?.cpackage;
-  const landType = selectedLocation?.landType;
-  const landSection = selectedLocation?.landSection;
+  //--- Generate Chart data
+  const qV = [cpackage, landtype, landsection];
+  const qF = [cp_f, lot_type_f, lot_section_f];
+  const queryc_str = makeQuery(qV, qF, `${str_status_f} >= 1`);
 
-  //--- 2. Streamlined Data Fetching with useQuery
   const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [
-      cpackage,
-      landType,
-      landSection,
-      statusStructureField,
-      structureLayer,
-    ],
+    queryKey: [cpackage, landtype, landsection, str_status_f, structureLayer],
     queryFn: async () => {
-      const query_qValues = [cpackage, landType, landSection];
-
-      queryc_struc.qValues = query_qValues;
-      queryc_struc.qExpression = `${statusStructureField} >= 1`;
-
       queryDefinitionExpression({
-        queryExpression: queryc_struc.queryExpression(),
+        queryExpression: queryc_str.queryExpression(),
         featureLayer: [structureLayer],
       });
 
-      //--- Pie chart data
-      const chartData = await pieChartData({
-        piechart: piechart_struc,
-        qChart: queryc_struc,
-        layer: structureLayer,
-        statusList: statusStructureQuery,
-        statusField: statusStructureField,
-        statisticField: statusStructureField,
-        statisticType: "count",
-      });
+      const queryc2_str = makeQuery(qV, qF, `${str_remarks_f} = 'Demolished'`);
+      const queryc3_str = makeQuery(qV, qF, `${str_remarks_f} IS NOT NULL`);
 
-      //--- numbe of demolished structures
-      queryc_struc2.qValues = query_qValues;
-      queryc_struc2.qExpression = `${structureRemarksField} = 'Demolished'`;
-      const demolished = await fieldStatistic({
-        qChart: queryc_struc2.queryExpression(),
-        layer: structureLayer,
-        statisticField: structureRemarksField,
-        statisticType: "count",
-      });
+      const [chartData, demolished, tobe_demolish] = await Promise.all([
+        // Chart data
+        pieChartData({
+          piechart: new ChartPieSeries(),
+          qChart: queryc_str,
+          layer: structureLayer,
+          statusList: str_status_q,
+          statusField: str_status_f,
+          statisticField: str_status_f,
+          statisticType: "count",
+        }),
 
-      //--- number of structures subject to demolition
-      queryc_struc3.qValues = query_qValues;
-      queryc_struc3.qExpression = `${structureRemarksField} IS NOT NULL`;
-      const tobe_demolish = await fieldStatistic({
-        qChart: queryc_struc3.queryExpression(),
-        layer: structureLayer,
-        statisticField: structureRemarksField,
-        statisticType: "count",
-      });
+        //--- numbe of demolished structures
+        fieldStatistic({
+          qChart: queryc2_str.queryExpression(),
+          layer: structureLayer,
+          statisticField: str_remarks_f,
+          statisticType: "count",
+        }),
+
+        //--- number of structures subject to demolition
+        fieldStatistic({
+          qChart: queryc3_str.queryExpression(),
+          layer: structureLayer,
+          statisticField: str_remarks_f,
+          statisticType: "count",
+        }),
+      ]);
 
       //--- percent demolished
       const perce_demolished = Math.round((demolished / tobe_demolish) * 100);
@@ -160,27 +150,27 @@ const ChartStructure = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    const crender = new ChartPieSeriesRender(
+    PieChartRender({
+      render: new ChartPieSeriesRender(),
       chart,
-      pieSeries,
+      pieSeries: pieSeries,
       legend,
       root,
-      queryc_struc,
-      undefined,
-      statusStructureField,
-      arcgisMap?.view,
-      setChartPanelwidth,
-      chartData,
-      new_pieSeriesScale,
-      "STRUCTURES",
-      new_pieInnerLabelFontSize,
-      new_pieInnerValueFontSize,
-      structureLayer,
-      statusStructureQuery,
-      false,
-      true,
-    );
-    crender.chartDataRenderer();
+      qChart: queryc_str,
+      q2Expression: undefined,
+      status_field: str_status_f,
+      view: arcgisMap?.view,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
+      seriesScale: new_pieSeriesScale,
+      innerLabel: "STRUCTURES",
+      innerLabelFontSize: new_pieInnerLabelFontSize,
+      innerValueFontSize: new_pieInnerValueFontSize,
+      layer: structureLayer,
+      statusArray: str_status_q,
+      bkg_color_switch: false,
+      seriesFillHash: true,
+    });
 
     return () => {
       root.dispose();
@@ -202,15 +192,13 @@ const ChartStructure = memo(() => {
           width={`${new_imageSize}%`}
           style={{ marginTop: "10px", marginLeft: "20px" }}
         />
-        <dl style={{ alignItems: "center", marginRight: "25px" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+        <dl style={{ alignItems: "center", marginRight: "8%" }}>
+          <dt style={{ color: labelColor, fontSize: `${new_fontSize}px` }}>
             TOTAL STRUCTURES
           </dt>
           <dd
             style={{
-              color: valueLabelColor,
+              color: valueColor,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
@@ -245,14 +233,12 @@ const ChartStructure = memo(() => {
           style={{ marginTop: "10px", marginLeft: "20px" }}
         />
         <dl style={{ alignItems: "center", marginRight: "35px" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: labelColor, fontSize: `${new_fontSize}px` }}>
             DEMOLISHED
           </dt>
           <dd
             style={{
-              color: valueLabelColor,
+              color: valueColor,
               fontSize: `${new_valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",

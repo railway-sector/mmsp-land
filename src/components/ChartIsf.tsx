@@ -1,16 +1,22 @@
-import { useRef, useState, useEffect, memo } from "react";
-import { isfLayer, piechart_isf, queryc_isf } from "../layers";
-import { pieChartData, thousands_separators } from "../query";
+import { useRef, useState, useEffect, memo, use } from "react";
+import { isfLayer } from "../layers";
+import {
+  makeQuery,
+  pieChartData,
+  PieChartRender,
+  thousands_separators,
+} from "../query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import {
-  primaryLabelColor,
-  statusIsf,
-  statusIsfField,
-  statusIsfQuery,
-  valueLabelColor,
+  cp_f,
+  isf_status_f,
+  isf_status_q,
+  lot_section_f,
+  lot_type_f,
+  labelColor,
+  valueColor,
 } from "../uniqueValues";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation, ChartResponse } from "../interfaceKeys";
+import type { ChartResponse } from "../interfaceKeys";
 import { useQuery } from "@tanstack/react-query";
 import { queryDefinitionExpression } from "../queryDefinition";
 import {
@@ -21,45 +27,36 @@ import {
   seriesSetter,
 } from "../chartSetter";
 import ChartPieSeriesRender from "chart-pie-series-render";
+import { MyContext } from "../contexts/MyContext";
+import ChartPieSeries from "chart-pie-series";
 
-/// Draw chart
 const ChartIsf = memo(() => {
+  const { cpackage, landtype, landsection } = use(MyContext);
+
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const cpackage = selectedLocation?.cpackage;
-  const landType = selectedLocation?.landType;
-  const landSection = selectedLocation?.landSection;
+  //--- Generate Chart data
+  const qV = [cpackage, landtype, landsection];
+  const qF = [cp_f, lot_type_f, lot_section_f];
+  const queryc_isf = makeQuery(qV, qF, `${isf_status_f} IS NOT NULL`);
 
   //--- 2. Streamlined Data Fetching with useQuery
   const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, landType, landSection, statusIsfField],
+    queryKey: [cpackage, landtype, landsection, isf_status_f],
     queryFn: async () => {
-      queryc_isf.qValues = [
-        cpackage,
-        landType,
-        landSection,
-        statusIsf,
-        isfLayer,
-      ];
       queryDefinitionExpression({
         queryExpression: queryc_isf.queryExpression(),
         featureLayer: [isfLayer],
       });
 
       const chartData = await pieChartData({
-        piechart: piechart_isf,
+        piechart: new ChartPieSeries(),
         qChart: queryc_isf,
         layer: isfLayer,
-        statusList: statusIsfQuery, //statusIsf,
-        statusField: statusIsfField,
-        statisticField: statusIsfField,
+        statusList: isf_status_q,
+        statusField: isf_status_f,
+        statisticField: isf_status_f,
         statisticType: "count",
       });
 
@@ -117,27 +114,27 @@ const ChartIsf = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    const crender = new ChartPieSeriesRender(
+    PieChartRender({
+      render: new ChartPieSeriesRender(),
       chart,
-      pieSeries,
+      pieSeries: pieSeries,
       legend,
       root,
-      queryc_isf,
-      undefined,
-      statusIsfField,
-      arcgisMap?.view,
-      setChartPanelwidth,
-      chartData,
-      new_pieSeriesScale,
-      "FAMILIES",
-      new_pieInnerLabelFontSize,
-      new_pieInnerValueFontSize,
-      isfLayer,
-      statusIsfQuery,
-      false,
-      false,
-    );
-    crender.chartDataRenderer();
+      qChart: queryc_isf,
+      q2Expression: undefined,
+      status_field: isf_status_f,
+      view: arcgisMap?.view,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
+      seriesScale: new_pieSeriesScale,
+      innerLabel: "HOUSEHOLDS",
+      innerLabelFontSize: new_pieInnerLabelFontSize,
+      innerValueFontSize: new_pieInnerValueFontSize,
+      layer: isfLayer,
+      statusArray: isf_status_q,
+      bkg_color_switch: false,
+      seriesFillHash: undefined,
+    });
 
     return () => {
       root.dispose();
@@ -160,14 +157,12 @@ const ChartIsf = memo(() => {
           style={{ marginTop: "20px", marginLeft: "20px" }}
         />
         <dl style={{ alignItems: "center", marginRight: "30px" }}>
-          <dt
-            style={{ color: primaryLabelColor, fontSize: `${new_fontSize}px` }}
-          >
+          <dt style={{ color: labelColor, fontSize: `${new_fontSize}px` }}>
             TOTAL FAMILIES
           </dt>
           <dd
             style={{
-              color: valueLabelColor,
+              color: valueColor,
               fontSize: "1.9rem",
               fontWeight: "bold",
               fontFamily: "calibri",

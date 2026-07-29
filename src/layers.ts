@@ -1,1229 +1,285 @@
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import LabelClass from "@arcgis/core/layers/support/LabelClass";
-import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
-import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
-import SimpleRenderer from "@arcgis/core/renderers/SimpleRenderer";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
-import MapImageLayer from "@arcgis/core/layers/MapImageLayer";
-import TextSymbol from "@arcgis/core/symbols/TextSymbol";
-import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-
 import {
-  colorIsf,
-  colorStructure,
-  statusLotLabel,
-  statusLotColor,
-  statusIsf,
-  statusStructure,
-  statusIsfLabel,
-  statusStructureDemolish,
-  statusStructureDemolishLabel,
-  statusStructureDemolishColor,
-  land_portalItem_id,
-  alignment_portalItem_id,
-  portal_url,
-  lot_layer_title,
-  lot_id_field,
-  lotStatusField,
-  handedOverField,
-  tobeHandedOverField,
-  cpField,
-  lotTypeField,
-  station1Field,
+  station_box_renderer,
+  old_senate_stbox_renderer,
+  c_boundary_renderer,
+  senate_c_boundary_renderer,
+  evs_station_renderer,
+  station_labels,
+  lot_id_label,
+  lot_status_renderer,
+  lot_popup,
+  lot_subt18_renderer,
+  lot_subt18_popup,
+  lot_public_renderer,
+  lot_public_popup,
+  lot_boundary_renderer,
+  lot_boundary_label,
+  lot_ho_renderer,
+  lot_tobe_ho_renderer,
+  structureLayerRenderer,
+  str_popup,
+  str_demo_status_renderer,
+  str_demo_popup,
+  str_oas_renderer,
+  str_oas_label,
+  isf_renderer,
+  isf_popup,
+  portalItems,
+  lot_status_f,
+  lot_id_f,
+  lot_ho_f,
 } from "./uniqueValues";
-import QueryExpressionLayers from "query-layers-expression";
-import ChartPieSeries from "chart-pie-series";
 
-export const piechart = new ChartPieSeries(
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const piechartaa = new ChartPieSeries(
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const piechart_struc = new ChartPieSeries(
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const piechart_isf = new ChartPieSeries(
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_lot = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_lot2 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_lot3 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_struc = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_struc2 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_struc3 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc_isf = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const querycExpro = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc3 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const queryc4 = new QueryExpressionLayers(
-  [undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-export const querycRenderer = new QueryExpressionLayers(
-  [undefined, undefined, undefined],
-  [cpField, lotTypeField, station1Field],
-  undefined,
-  undefined,
-  "string",
-  0,
-  undefined,
-  undefined,
-  undefined,
-);
-
-/* Standalone table for Dates */
-export const dateTable = new FeatureLayer({
-  portalItem: {
-    id: "a084d9cae5234d93b7aa50f7eb782aec",
-    portal: portal_url,
-  },
-});
-
-/* Station Box */
-const stationBoxRenderer = new UniqueValueRenderer({
-  field: "Layer",
-  uniqueValueInfos: [
-    {
-      value: "U-Shape Retaining Wall",
-      symbol: new SimpleFillSymbol({
-        color: [104, 104, 104],
-        style: "backward-diagonal",
-        outline: {
-          width: 1,
-          color: "black",
-        },
-      }),
-    },
-    {
-      value: "Cut & Cover Box",
-      symbol: new SimpleFillSymbol({
-        color: [104, 104, 104],
-        style: "backward-diagonal",
-        outline: {
-          width: 1,
-          color: "black",
-        },
-      }),
-    },
-    {
-      value: "TBM Shaft",
-      symbol: new SimpleFillSymbol({
-        color: [104, 104, 104],
-        style: "backward-diagonal",
-        outline: {
-          width: 1,
-          color: "black",
-        },
-      }),
-    },
-    {
-      value: "TBM",
-      symbol: new SimpleFillSymbol({
-        color: [178, 178, 178],
-        style: "backward-diagonal",
-        outline: {
-          width: 0.5,
-          color: "black",
-        },
-      }),
-    },
-    {
-      value: "Station Platform",
-      symbol: new SimpleFillSymbol({
-        color: [240, 204, 230],
-        style: "backward-diagonal",
-        outline: {
-          width: 0.4,
-          color: "black",
-        },
-      }),
-    },
-    {
-      value: "Station Box",
-      symbol: new SimpleFillSymbol({
-        color: [0, 0, 0, 0],
-        outline: {
-          width: 2,
-          color: "red",
-        },
-      }),
-    },
-    {
-      value: "NATM",
-      symbol: new SimpleFillSymbol({
-        color: [178, 178, 178, 0],
-        style: "backward-diagonal",
-        outline: {
-          width: 0.5,
-          color: "grey",
-        },
-      }),
-    },
-  ],
-});
-
+//----------------------------------------------//
+//            Alignment Layers                  //
+//----------------------------------------------//
+//--- STATION BOX LAYER ---//
 export const stationBoxLayer = new FeatureLayer({
-  portalItem: {
-    id: alignment_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 2,
-  renderer: stationBoxRenderer,
+  renderer: station_box_renderer,
   minScale: 150000,
   maxScale: 0,
   title: "Station Box",
-  // outFields: ['*'],
   popupEnabled: false,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
+  elevationInfo: { mode: "on-the-ground" },
 });
 
-const stationBoxRendererOldSenate = new UniqueValueRenderer({
-  field: "Layer",
-  uniqueValueInfos: [
-    {
-      value: "Station Platform",
-      symbol: new SimpleFillSymbol({
-        color: [168, 168, 20],
-        style: "solid",
-        outline: {
-          width: 0.7,
-          color: "#6e6e6e",
-        },
-      }),
-    },
-    {
-      value: "Station Box",
-      symbol: new SimpleFillSymbol({
-        color: [45, 126, 135, 30],
-        style: "solid",
-        outline: {
-          width: 0.7,
-          color: "#6e6e6e",
-        },
-      }),
-    },
-  ],
-});
-
+//--- OLD SENATE STATION BOX LAYER ---//
 export const senateStationBoxOld = new FeatureLayer({
-  portalItem: {
-    id: "791f47c19d054cf88dd85fa5a4b4c991",
-    portal: portal_url,
-  },
+  portalItem: portalItems("791f47c19d054cf88dd85fa5a4b4c991"),
   layerId: 25,
-  renderer: stationBoxRendererOldSenate,
+  renderer: old_senate_stbox_renderer,
   minScale: 150000,
   maxScale: 0,
   title: "Senate Old Station Box",
-  // outFields: ['*'],
   popupEnabled: false,
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
+  elevationInfo: { mode: "on-the-ground" },
 });
 
-/* Land */
-export const lotDefaultSymbol = new SimpleFillSymbol({
-  color: [0, 0, 0, 0],
-  style: "solid",
-  outline: {
-    // autocasts as new SimpleLineSymbol()
-    color: [110, 110, 110],
-    width: 0.7,
-  },
-});
-
-export const lotLayerUniquValueInfos: any = statusLotLabel.map(
-  (status: any, index: any) => {
-    return Object.assign({
-      value: index + 1,
-      label: status,
-      symbol: new SimpleFillSymbol({
-        color: statusLotColor[index],
-      }),
-    });
-  },
-);
-
-export const lotLayerStatusRenderer = new UniqueValueRenderer({
-  field: lotStatusField,
-  // defaultSymbol: defaultSymbolLot,
-  uniqueValueInfos: lotLayerUniquValueInfos,
-});
-
-const lotLabel = new LabelClass({
-  symbol: new TextSymbol({
-    color: "black",
-    font: {
-      size: 8,
-    },
-  }),
-  // labelPlacement: 'above-center',
-  labelExpressionInfo: {
-    expression: "$feature.CN",
-  },
-});
-
-export const lotLayer = new FeatureLayer({
-  portalItem: {
-    id: "93790e8102f84713a69e562da12bb415",
-    portal: portal_url,
-  },
-  // layerId: 8,
-  outFields: [lot_id_field, lotStatusField],
-  title: lot_layer_title,
-  labelingInfo: [lotLabel],
-  renderer: lotLayerStatusRenderer,
-  // popupEnabled: false,
-  // timeInfo: {
-  //   startField: "HandOverDate",
-  //   interval: {
-  //     unit: "days",
-  //     value: 1,
-  //   },
-  // },
-  minScale: 50000,
-  maxScale: 0,
-  popupTemplate: {
-    title: "<p>{Id}</p>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "OWNER",
-            label: "Land Owner",
-          },
-          {
-            fieldName: "Station1",
-          },
-          {
-            fieldName: "StatusNVS3",
-            label: "<p>Status of Land Acquisition</p>",
-          },
-          {
-            fieldName: "HandOverDate",
-            label: "Handed-over date",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* Subteranean Lots with tunnel deeper than 18m */
-const subterraenanLots18Renderer = new UniqueValueRenderer({
-  valueExpression:
-    "When($feature.Tunnel_Depth > 18, 'deepSubte', 'shallowSubte')",
-  uniqueValueInfos: [
-    {
-      value: "deepSubte",
-      label: "Tunnel Depth (>18m)",
-      symbol: new SimpleFillSymbol({
-        color: "#7CFC00",
-        style: "backward-diagonal",
-        outline: {
-          color: "#7CFC00",
-          width: 1,
-        },
-      }),
-    },
-    // {
-    //   value: "shallowSubte",
-    //   label: "Subterranean Lots (<=18m)",
-    //   symbol: new SimpleFillSymbol({
-    //     color: undefined,
-    //   }),
-    // },
-  ],
-});
-
-export const subterraenanLots18_layer = new FeatureLayer({
-  portalItem: {
-    id: "0c172b82ddab44f2bb439542dd75e8ae",
-    portal: portal_url,
-  },
-  layerId: 8,
-  outFields: [lot_id_field, lotStatusField],
-  title: "Subterranean Lots",
-  definitionExpression: "Type = 'Subterranean' AND Tunnel_Depth > 18",
-  labelingInfo: [lotLabel],
-  renderer: subterraenanLots18Renderer,
-  minScale: 50000,
-  maxScale: 0,
-  popupTemplate: {
-    title: "<p>{Id}</p>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "OWNER",
-            label: "Land Owner",
-          },
-          {
-            fieldName: "Station1",
-          },
-          {
-            fieldName: "StatusNVS3",
-            label: "<p>Status of Land Acquisition</p>",
-          },
-          {
-            fieldName: "Tunnel_Depth",
-            label: "Tunnel Depth (m)",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* Public Land */
-const publicLotRenderer = new UniqueValueRenderer({
-  valueExpression: "When($feature.StatusNVS3 > 0, 'withStatus', 'publicLands')",
-  uniqueValueInfos: [
-    {
-      value: "withStatus",
-      symbol: null,
-    },
-    {
-      value: "publicLands",
-      symbol: new SimpleFillSymbol({
-        color: "#d8cdcdff",
-        style: "diagonal-cross",
-        outline: {
-          width: 1,
-          color: "#d8cdcdff",
-        },
-      }),
-    },
-  ],
-});
-
-export const publicLotLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 8,
-  outFields: [lot_id_field, lotStatusField],
-  title: "Public Lot",
-  labelingInfo: [lotLabel],
-  renderer: publicLotRenderer,
-  definitionExpression: "StatusNVS3 IS NULL",
-  // popupEnabled: false,
-  popupTemplate: {
-    title: "<p>{Id}: Public Land</p>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "OWNER",
-            label: "Land Owner",
-          },
-          {
-            fieldName: "Station1",
-          },
-          {
-            fieldName: "StatusNVS3",
-            label: "<p>Status of Land Acquisition</p>",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* Lot boundary only */
-const lotLayerBoundaryRenderer = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: [0, 0, 0, 0],
-    style: "solid",
-    outline: {
-      color: [110, 110, 110],
-      width: 1.5,
-    },
-  }),
-});
-
-const lotLayerBoundaryLabel = new LabelClass({
-  symbol: new TextSymbol({
-    color: "white",
-    font: {
-      // autocast as new Font()
-      family: "Gill Sans",
-      size: 8,
-    },
-  }),
-  // labelPlacement: 'above-center',
-  labelExpressionInfo: {
-    expression: "$feature.CN",
-  },
-});
-
-export const lotLayerBoundary = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 8,
-  // outFields: ['*'],
-  title: "Lot Boundary",
-  renderer: lotLayerBoundaryRenderer,
-  labelingInfo: [lotLayerBoundaryLabel],
-});
-
-/* Handed-Over Lot */
-const handedOverRenderer = new UniqueValueRenderer({
-  field: handedOverField,
-  uniqueValueInfos: [
-    {
-      value: 1,
-      label: " ",
-      symbol: new SimpleFillSymbol({
-        color: "#E7298A", //[0, 255, 255, 0.1], #00ffff
-        // outline: new SimpleLineSymbol({
-        //   color: "#00ffff",
-        //   width: "4px",
-        // }),
-      }),
-    },
-  ],
-});
-
-export const handedOverLotLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 8,
-  // outFields: ['*'],
-  // definitionExpression: "HandedOver = 1 AND Type = 'Station'",
-  // title: 'Handed-Over (Station)',
-  definitionExpression: `${handedOverField} = 1`,
-  title: "Handed Over (GC to JV)",
-  renderer: handedOverRenderer,
-  popupEnabled: false,
-});
-
-const toBeHandedOverRenderer = new UniqueValueRenderer({
-  field: tobeHandedOverField,
-  uniqueValueInfos: [
-    {
-      value: 1,
-      label: "",
-      symbol: new SimpleFillSymbol({
-        color: "#73B2FF", //[0, 255, 255, 0.1], #00ffff
-        // outline: new SimpleLineSymbol({
-        //   color: "#00ffff",
-        //   width: "4px",
-        // }),
-      }),
-    },
-  ],
-});
-
-export const tobeHandedOverLotLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 8,
-  title: "To be Handed Over (to JV)",
-  renderer: toBeHandedOverRenderer,
-  popupEnabled: false,
-});
-// handedOverLotLayer.listMode = "hide";
-
-/* Handed-Over Subterranean Lot */
-// const pteSubterraneanRenderer = new SimpleRenderer({
-//   symbol: new SimpleFillSymbol({
-//     color: '#FF00C5',
-//     style: 'solid',
-//     outline: new SimpleLineSymbol({
-//       color: [110, 110, 110],
-//       width: 0.5,
-//     }),
-//   }),
-// });
-
-// const pteSubterraneanRenderer = new UniqueValueRenderer({
-//   field: 'Type',
-//   defaultSymbol: defaultSymbolLot,
-//   uniqueValueInfos: [
-//     {
-//       value: 1,
-//       label: 'PTE',
-//       symbol: new SimpleFillSymbol({
-//         color: '#FF00C5',
-//         style: 'solid',
-//         outline: new SimpleLineSymbol({
-//           color: [110, 110, 110],
-//           width: 0.5,
-//         }),
-//       }),
-//     },
-//   ],
-// });
-
-// export const pteLotSubteLayer = new FeatureLayer({
-//   portalItem: {
-//     id: land_portalItem_id,
-//     portal: portal_url,
-//   },
-//   layerId: 8,
-//   definitionExpression: "HandedOver = 1 AND Type = 'Subterranean'",
-//   // definitionExpression: "Type = 'Subterranean'",
-//   title: 'PTE (Subterranean)',
-//   renderer: pteSubterraneanRenderer,
-//   popupEnabled: false,
-// });
-
-/* Handed-Over Subterranean Lot for PTE summary */
-export const pteLotSubteLayer1 = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 8,
-  // outFields: ['*'],
-  // eslint-disable-next-line no-useless-concat
-  definitionExpression: "Type = 'Subterranean'",
-});
-
-/* Structure Layer */
-const defaultLotSymbolBoundary = new SimpleFillSymbol({
-  color: [0, 0, 0, 0],
-  style: "solid",
-  outline: {
-    style: "short-dash",
-    color: [215, 215, 158],
-    width: 1.5,
-  },
-});
-
-const structureLayerUniquValueInfos: any = statusStructure.map(
-  (status: any, index: any) => {
-    return Object.assign({
-      value: index + 1,
-      label: status,
-      symbol: new SimpleFillSymbol({
-        color: colorStructure[index],
-        style: "backward-diagonal",
-        outline: {
-          color: "#6e6e6e",
-          width: 0.7,
-        },
-      }),
-    });
-  },
-);
-
-export const structureLayerRenderer = new UniqueValueRenderer({
-  field: "Status",
-  defaultSymbol: defaultLotSymbolBoundary,
-  uniqueValueInfos: structureLayerUniquValueInfos,
-});
-
-export const structureLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 9,
-  // portalItem: {
-  //   id: 'c3755225948646a0b486397768492951',
-  // },
-  // layerId: 1,
-  title: "Existing Structure",
-  // outFields: ['*'],
-  renderer: structureLayerRenderer,
-  popupTemplate: {
-    title: "Structure ID: <b>{STRUCTURE_TAG_NO_}</b>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "STATION",
-            label: "Station",
-          },
-          {
-            fieldName: "Status",
-            label: "<b>Status of Structure</b>",
-          },
-          {
-            fieldName: "LOT_OWNER",
-            label: "Lot Owner",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* Structure Demolished Layer */
-const structureDemolishUniqueValueInfos = statusStructureDemolish.map(
-  (status: any, index: any) => {
-    return Object.assign({
-      value: status,
-      label: statusStructureDemolishLabel[index],
-      symbol: new SimpleFillSymbol({
-        color: statusStructureDemolishColor[index],
-        style: "solid",
-        outline: {
-          color: "#6E6E6E",
-          width: 0.7,
-        },
-      }),
-    });
-  },
-);
-const structureDemolishedRenderer = new UniqueValueRenderer({
-  field: "REMARKS",
-  defaultSymbol: defaultLotSymbolBoundary, // autocasts as new SimpleFillSymbol()
-  uniqueValueInfos: structureDemolishUniqueValueInfos,
-});
-
-export const structureDemolishedLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 9,
-  title: "Demolished Structure",
-  // outFields: ['*'],
-  renderer: structureDemolishedRenderer,
-  popupTemplate: {
-    title: "Structure ID: <b>{STRUCTURE_TAG_NO_}</b>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "STATION",
-            label: "Station",
-          },
-          {
-            fieldName: "Status",
-            label: "<b>Status of Structure</b>",
-          },
-          {
-            fieldName: "LOT_OWNER",
-            label: "Lot Owner",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* ISF Layer */
-const isfRendererUniqueValueInfos = statusIsf.map((status: any, index: any) => {
-  return Object.assign({
-    value: status,
-    label: statusIsfLabel[index],
-    symbol: new SimpleMarkerSymbol({
-      size: 9,
-      color: colorIsf[index],
-      outline: {
-        width: 1.5,
-        color: "white",
-      },
-    }),
-  });
-});
-const isfRenderer = new UniqueValueRenderer({
-  field: "RELOCATION",
-  uniqueValueInfos: isfRendererUniqueValueInfos,
-});
-
-export const isfLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 10,
-  title: "ISF (Informal Settlers Families)",
-  // outFields: ['*'],
-  renderer: isfRenderer,
-  labelsVisible: false,
-  popupTemplate: {
-    title: "<p>{Id}</p>",
-    lastEditInfoEnabled: false,
-    returnGeometry: true,
-    content: [
-      {
-        type: "fields",
-        fieldInfos: [
-          {
-            fieldName: "Package",
-            label: "CP",
-          },
-          {
-            fieldName: "Station1",
-            label: "Station",
-          },
-          {
-            fieldName: "RELOCATION",
-            label: "Status",
-          },
-        ],
-      },
-    ],
-  },
-});
-
-/* Construction Boundary */
-const ConstructionBoundaryFill = new UniqueValueRenderer({
-  field: "MappingBoundary",
-  uniqueValueInfos: [
-    {
-      value: 1,
-      label: "",
-      symbol: new SimpleFillSymbol({
-        // color: [0, 0, 0, 0],
-        style: "none",
-        outline: {
-          width: 2.5,
-          color: [255, 255, 255],
-          style: "short-dash",
-        },
-      }),
-    },
-  ],
-});
-
+//--- CONSTRUCTION BOUNDARY ---//
 export const constructionBoundaryLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
   layerId: 4,
-  // outFields: ['*'],
-  renderer: ConstructionBoundaryFill,
+  renderer: c_boundary_renderer,
   definitionExpression: "MappingBoundary = 1",
   title: "Construction Boundary",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
+  elevationInfo: { mode: "on-the-ground" },
   popupEnabled: false,
 });
 
-const senateConstructionBoundaryFillOld = new SimpleRenderer({
-  symbol: new SimpleFillSymbol({
-    color: [148, 57, 38, 30],
-    style: "solid",
-    outline: {
-      width: 1,
-      color: "#6e6e6e",
-    },
-  }),
-});
-
+//--- SENATE CONSTRUCTION BOUNDARY ---//
 export const senateConstructionBoundaryLayerOld = new FeatureLayer({
-  portalItem: {
-    id: "791f47c19d054cf88dd85fa5a4b4c991",
-    portal: portal_url,
-  },
+  portalItem: portalItems("791f47c19d054cf88dd85fa5a4b4c991"),
   layerId: 24,
-  // outFields: ['*'],
-  renderer: senateConstructionBoundaryFillOld,
+  renderer: senate_c_boundary_renderer,
   title: "Senate Old Construction Boundary",
-  elevationInfo: {
-    mode: "on-the-ground",
-  },
+  elevationInfo: { mode: "on-the-ground" },
   popupEnabled: false,
 });
 
-/* Alignment Line */
+//--- ALIGNMENT LINE LAYER ---//
 export const alignmentLine = new FeatureLayer({
-  portalItem: {
-    id: alignment_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 6,
-  // outFields: ['*'],
   title: "Alignment",
   popupEnabled: false,
 });
 
-/* Segment DPWH */
-export const dpwhSegmentLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 2,
-  title: "DPWH Segment",
-  // outFields: ['*'],
-  popupEnabled: false,
-});
-
-/* Depot Building */
-export const depotBuildingLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 6,
-  title: "Depot Building",
-  // outFields: ['*'],
-  popupEnabled: false,
-});
-
-/* BSS Building */
-export const bssDepotBuildingLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 7,
-  title: "BSS Building",
-  // outFields: ['*'],
-  popupEnabled: false,
-});
-
-/* East Valenzuela */
-const evs_station_renderer = new UniqueValueRenderer({
-  field: "Layer",
-  uniqueValueInfos: [
-    {
-      value: "Station Building",
-      label: "Station Building",
-      symbol: new SimpleFillSymbol({
-        style: "none",
-        outline: {
-          style: "long-dash",
-          width: 1.5,
-          color: [225, 225, 225],
-        },
-      }),
-    },
-    {
-      value: "Station Plaza",
-      label: "Station Plaza",
-      symbol: new SimpleFillSymbol({
-        color: [60, 175, 153],
-        // style: 'cross',
-        outline: {
-          width: 1,
-          color: [225, 225, 225],
-        },
-      }),
-    },
-    {
-      value: "Cross Road Box",
-      label: "Cross Road Box",
-      symbol: new SimpleFillSymbol({
-        color: [168, 56, 0],
-        outline: {
-          width: 1,
-          color: [225, 225, 225],
-        },
-      }),
-    },
-    {
-      value: "Platform",
-      label: "Platform",
-      symbol: new SimpleFillSymbol({
-        color: "pink",
-        style: "backward-diagonal",
-        outline: {
-          width: 1,
-          color: [225, 225, 225],
-          style: "solid",
-        },
-      }),
-    },
-  ],
-});
-
+//--- EAST VALENZUELA STATION LAYER ---//
 export const evsLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
   layerId: 1,
   title: "East Valenzuela Station",
   renderer: evs_station_renderer,
-  // outFields: ['*'],
   popupEnabled: false,
 });
 
-/* NNC Construction boundary (Senate) */
-export const senateBoundaryLayer = new FeatureLayer({
-  portalItem: {
-    id: land_portalItem_id,
-    portal: portal_url,
-  },
-  layerId: 5,
-  title: "NCC Property",
-  // outFields: ['*'],
-  popupEnabled: false,
-});
-
-/* Station Layer */
-const stationLabels = new LabelClass({
-  labelExpressionInfo: { expression: "$feature.Station1" },
-  symbol: {
-    type: "text",
-    color: "black",
-    haloColor: "white",
-    haloSize: 1,
-    font: {
-      size: 10,
-      weight: "bold",
-    },
-  },
-});
-
+//--- STATION POINT LAYER ---//
 export const stationLayer = new FeatureLayer({
-  portalItem: {
-    id: alignment_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 1,
-  labelingInfo: [stationLabels],
+  labelingInfo: [station_labels],
   title: "Station",
   definitionExpression: "Project = 'MMSP'",
-  //screenSizePerspectiveEnabled: false, // gives constant size regardless of zoom
 });
 stationLayer.listMode = "hide";
 
+//----------------------------------------------//
+//               Other layers                   //
+//----------------------------------------------//
+//--- DATE FEATURE TABLE ---//
+export const dateTable = new FeatureLayer({
+  portalItem: portalItems("a084d9cae5234d93b7aa50f7eb782aec"),
+});
+
+//--- SEGMENT DPWH LAYER ---//
+export const dpwhSegmentLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 2,
+  title: "DPWH Segment",
+  popupEnabled: false,
+});
+
+//--- DEPOT BUILDING LAYER ---//
+export const depotBuildingLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 6,
+  title: "Depot Building",
+  popupEnabled: false,
+});
+
+//--- BSS BUILDING LAYER ---//
+export const bssDepotBuildingLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 7,
+  title: "BSS Building",
+  popupEnabled: false,
+});
+
+//--- NNC CONSTRUCTION BOUNDARY (SENATE) ---//
+export const senateBoundaryLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 5,
+  title: "NCC Property",
+  popupEnabled: false,
+});
+
+//--- CREEK DIVERSION LAYER ---//
 export const creekDivLayer = new FeatureLayer({
-  portalItem: {
-    id: alignment_portalItem_id,
-    portal: portal_url,
-  },
+  portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 3,
   title: "Creek Diversion",
-  // outFields: ['*'],
   popupEnabled: false,
 });
 
+//--- OAS ACCESS ROAD LAYER ---//
 export const oas_accessRoad = new FeatureLayer({
-  portalItem: {
-    id: "437ae464f49544e080c9dda8f98a169d",
-    portal: portal_url,
-  },
+  portalItem: portalItems("437ae464f49544e080c9dda8f98a169d"),
   layerId: 29,
   title: "OAS Access Road",
-  // outFields: ['*'],
   popupEnabled: false,
 });
 
-// OAS affected structure
-const oas_affecctedStructure_Renderer = new UniqueValueRenderer({
-  field: "REMARKS",
-  uniqueValueInfos: [
-    {
-      value: "Areas not yet Handed Over",
-      label: "Areas not yet Handed Over",
-      symbol: new SimpleFillSymbol({
-        style: "solid",
-        color: "white",
-        // outline: {
-        //   style: "long-dash",
-        //   width: 1,
-        //   color: "white",
-        // },
-      }),
-    },
-    {
-      value: "Handed Over Areas",
-      label: "Handed Over Areas",
-      symbol: new SimpleFillSymbol({
-        style: "solid",
-        color: "#FFE5B4",
-      }),
-    },
-    {
-      value: "Demolished",
-      label: "Demolished",
-      symbol: new SimpleFillSymbol({
-        style: "solid",
-        color: "gray",
-      }),
-    },
-  ],
+//----------------------------------------------//
+//       Lot / Structure / ISF Layers           //
+//----------------------------------------------//
+//--- LOT LAYER ---//
+export const lotLayer = new FeatureLayer({
+  portalItem: portalItems("93790e8102f84713a69e562da12bb415"),
+  outFields: [lot_id_f, lot_status_f],
+  title: "Acquisition Status",
+  labelingInfo: [lot_id_label],
+  renderer: lot_status_renderer,
+  minScale: 50000,
+  maxScale: 0,
+  popupTemplate: lot_popup,
 });
 
-const oas_affectedStructuresLabels = new LabelClass({
-  symbol: new TextSymbol({
-    color: "black",
-    font: {
-      size: 8,
-      weight: "bold",
-    },
-    haloColor: "white",
-    haloSize: "0.5pt",
-  }),
-  // labelPlacement: 'above-center',
-  labelExpressionInfo: {
-    expression: "$feature.STRUCTURE_TAG_NO_",
-  },
+//--- SUBTERRANEAN LOT 18 UNDER LAYER ---//
+export const subterraenanLots18_layer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  outFields: [lot_id_f, lot_status_f],
+  title: "Subterranean Lots",
+  definitionExpression: "Type = 'Subterranean' AND Tunnel_Depth > 18",
+  labelingInfo: [lot_id_label],
+  renderer: lot_subt18_renderer,
+  minScale: 50000,
+  maxScale: 0,
+  popupTemplate: lot_subt18_popup,
 });
 
-// Areas not yet Handed Over (White), Handed Over Areas (Peach),  and Demolished (Gray)
+//--- PUBLIC LAND LAYER ---//
+export const publicLotLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  outFields: [lot_id_f, lot_status_f],
+  title: "Public Lot",
+  labelingInfo: [lot_id_label],
+  renderer: lot_public_renderer,
+  definitionExpression: "StatusNVS3 IS NULL",
+  popupTemplate: lot_public_popup,
+});
+
+//--- LOT BOUNDARY LAYER ---//
+export const lotLayerBoundary = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  title: "Lot Boundary",
+  renderer: lot_boundary_renderer,
+  labelingInfo: [lot_boundary_label],
+});
+
+//--- HANDED-OVER LOT LAYER ---//
+export const handedOverLotLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  definitionExpression: `${lot_ho_f} = 1`,
+  title: "Handed Over (GC to JV)",
+  renderer: lot_ho_renderer,
+  popupEnabled: false,
+});
+
+//--- TO-BE HANDED-OVER LOT LAYER ---//
+export const tobeHandedOverLotLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  title: "To be Handed Over (to JV)",
+  renderer: lot_tobe_ho_renderer,
+  popupEnabled: false,
+});
+
+//--- TO-BE SUBTERRANEAN LOT LAYER ---//
+export const pteLotSubteLayer1 = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 8,
+  definitionExpression: "Type = 'Subterranean'",
+});
+
+//--- STRUCTURE LAYER ---//
+export const structureLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 9,
+  title: "Existing Structure",
+  renderer: structureLayerRenderer,
+  popupTemplate: str_popup,
+});
+
+//--- STRUCTURE DEMOLISEHD LAYER ---//
+export const structureDemolishedLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 9,
+  title: "Demolished Structure",
+  renderer: str_demo_status_renderer,
+  popupTemplate: str_demo_popup,
+});
+
+//--- STRUCTURE: OAS AFFECTED LAYER ---//
 export const oas_affectedStructures = new FeatureLayer({
-  portalItem: {
-    id: "437ae464f49544e080c9dda8f98a169d",
-    portal: portal_url,
-  },
+  portalItem: portalItems("437ae464f49544e080c9dda8f98a169d"),
   layerId: 28,
   title: "OAS Affected Structures",
-  // outFields: ['*'],
-  renderer: oas_affecctedStructure_Renderer,
+  renderer: str_oas_renderer,
   popupEnabled: false,
-  labelingInfo: [oas_affectedStructuresLabels],
+  labelingInfo: [str_oas_label],
 });
 
-// Group Layer
+//--- ISF LAYER ---//
+export const isfLayer = new FeatureLayer({
+  portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
+  layerId: 10,
+  title: "ISF (Informal Settlers Families)",
+  renderer: isf_renderer,
+  labelsVisible: false,
+  popupTemplate: isf_popup,
+});
+
+//----------------------------------------------//
+//              Group Layers                    //
+//----------------------------------------------//
 export const accessRoadOptionsGroupLayer = new GroupLayer({
   title: "Ortigas Station",
   visible: true,
@@ -1279,30 +335,26 @@ export const structuresGroupLayer = new GroupLayer({
   layers: [structureLayer, structureDemolishedLayer],
 });
 
-// Drone image
-export const sbs_drone_image1 = new MapImageLayer({
-  portalItem: {
-    id: "c327b806413847518a6d8e3a8a680d53",
-    portal: portal_url,
+//----------------------------------------------//
+//              Other parameters                //
+//----------------------------------------------//
+export const sources: any = [
+  {
+    layer: lotLayer,
+    searchFields: ["LotID"],
+    displayField: "LotID",
+    exactMatch: false,
+    outFields: ["LotID"],
+    name: "Lot ID",
+    placeholder: "example: 10083",
   },
-  title: "SBS_20250303",
-  legendEnabled: false,
-  minScale: 3000,
-});
-
-export const sbs_drone_image2 = new MapImageLayer({
-  portalItem: {
-    id: "de5969507ce04c3286e951069dbebd81",
-    portal: portal_url,
+  {
+    layer: structureLayer,
+    searchFields: ["StrucID"],
+    displayField: "StrucID",
+    exactMatch: false,
+    outFields: ["StrucID"],
+    name: "Structure ID",
+    placeholder: "example: MCRP-01-01-ML028",
   },
-  title: "SBS_20260203",
-  legendEnabled: false,
-  minScale: 3000,
-});
-
-// export const droneGroupLayer = new GroupLayer({
-//   title: "Drone Images",
-//   visible: false,
-//   visibilityMode: "independent",
-//   layers: [sbs_drone_image1, sbs_drone_image2],
-// });
+];

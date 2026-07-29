@@ -21,7 +21,7 @@ export const timesliderKeys = {
 //-- date fields
 export interface DateFieldsType {
   dateFields: any;
-  latestasofdate: any;
+  latestdate?: any;
 }
 
 export const datefieldKeys = {
@@ -63,3 +63,5 @@ export interface BkColorSwitch {
 export const bkColorKeys = {
   selected: ["selectedBkColor"] as const,
 };
+
+export type statisticsType = "count" | "sum";

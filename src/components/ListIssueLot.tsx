@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { lotLayer, querycExpro } from "../layers";
+import { lotLayer } from "../layers";
 import Query from "@arcgis/core/rest/support/Query";
 import "@esri/calcite-components/components/calcite-shell";
 import "@esri/calcite-components/components/calcite-list";
@@ -8,70 +8,64 @@ import "@esri/calcite-components/components/calcite-shell-panel";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-avatar";
 import "@esri/calcite-components/components/calcite-action-bar";
-import { lotIssueListField } from "../uniqueValues";
+import { cp_f, lot_issue_f, lot_section_f, lot_type_f } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { useQuery } from "@tanstack/react-query";
-import { locationKeys } from "../interfaceKeys";
-import type { SelectedLocation } from "../interfaceKeys";
-import { useMemo } from "react";
+import { memo, use, useMemo } from "react";
+import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import { MyContext } from "../contexts/MyContext";
+import { makeQuery } from "../query";
 
 // Zoom in to selected lot from expropriation list
 let highlightSelect: any;
 async function resultClickHandler(event: any) {
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
-
   const queryExtent = new Query({
     objectIds: [event.target.value],
   });
-
   const result = await lotLayer.queryExtent(queryExtent);
-  result.extent &&
-    arcgisMap?.goTo({
-      target: result.extent,
-      zoom: 17,
-    });
+  result.extent && arcgisMap?.goTo({ target: result.extent, zoom: 17 });
 
   const layerView = await arcgisMap?.whenLayerView(lotLayer);
   highlightSelect && highlightSelect.remove();
   highlightSelect = layerView.highlight([event.target.value]);
-
   arcgisMap?.view.on("click", () => {
     layerView.filter = null;
     highlightSelect.remove();
   });
 }
 
-const ListIssueLot = () => {
-  //--- 1. Location state
-  const { data: selectedLocation } = useQuery<SelectedLocation | any>({
-    queryKey: locationKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
-  });
-  const cpackage = selectedLocation?.cpackage;
-  const landtype = selectedLocation?.landType;
-  const landsection = selectedLocation?.landSection;
+//--- Return expro lots
+interface QueryFeaturesType {
+  layer: FeatureLayer;
+  queryc: any;
+}
 
-  //--- queryFeatures function
-  async function queryFeatures() {
-    const query = lotLayer.createQuery();
+async function queryFeatures({ layer, queryc }: QueryFeaturesType) {
+  const query = lotLayer.createQuery();
+  query.where = queryc.queryExpression();
+  query.outFields = ["*"];
+  query.returnGeometry = true;
 
-    querycExpro.qValues = [cpackage, landtype, landsection];
-    querycExpro.qExpression = `${lotIssueListField} IS NOT NULL`;
-    query.where = querycExpro.queryExpression();
-    query.outFields = ["*"];
-    query.returnGeometry = true;
+  return await layer?.queryFeatures(query);
+}
 
-    return await lotLayer?.queryFeatures(query);
-  }
+const ListIssueLot = memo(() => {
+  const { cpackage, landtype, landsection } = use(MyContext);
+
+  //--- Make query expression
+  const qV = [cpackage, landtype, landsection];
+  const qF = [cp_f, lot_type_f, lot_section_f];
+  const queryc_issue = makeQuery(qV, qF, `${lot_issue_f} IS NOT NULL`);
 
   //--- Obtain queried Features
   const { data } = useQuery<any>({
-    queryKey: [cpackage, landtype, landsection, lotIssueListField],
-    queryFn: () => queryFeatures(),
+    queryKey: [cpackage, landtype, landsection, lot_issue_f],
+    queryFn: () => queryFeatures({ layer: lotLayer, queryc: queryc_issue }),
     select: (response) => {
       return response.features;
     },
+    staleTime: Infinity,
   });
 
   //--- Unique list
@@ -141,6 +135,6 @@ const ListIssueLot = () => {
       </calcite-list>
     </>
   );
-};
+});
 
 export default ListIssueLot;

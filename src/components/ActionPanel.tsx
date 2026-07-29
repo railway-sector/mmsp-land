@@ -3,91 +3,85 @@ import "@esri/calcite-components/components/calcite-list-item";
 import "@esri/calcite-components/components/calcite-shell-panel";
 import "@esri/calcite-components/components/calcite-action";
 import "@esri/calcite-components/components/calcite-action-bar";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import "@arcgis/map-components/components/arcgis-basemap-gallery";
 import "@arcgis/map-components/components/arcgis-layer-list";
 import "@arcgis/map-components/components/arcgis-legend";
 import "@arcgis/map-components/components/arcgis-time-slider";
-import { defineActions, lotStatusField } from "../uniqueValues";
+import { defineActions, lot_status_f } from "../uniqueValues";
 import Timeslider from "./Timeslider";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  datefieldKeys,
-  dateDisplayKeys,
-  timesliderKeys,
-} from "../interfaceKeys";
-import type {
-  DateFieldsType,
-  DisplayDates,
-  TimeSliderState,
-} from "../interfaceKeys";
-import { updateLotSymbology } from "../queryTimeslider";
+import { MyContext } from "../contexts/MyContext";
+import { toAsofdate, updateLotSymbology, useDateFields } from "../query";
+import { lotLayer } from "../layers";
 
 function ActionPanel() {
-  const queryClient = useQueryClient();
+  const { updateAsofdate, updateTimesliderOn } = use(MyContext);
+  const shellPanel: any = document.getElementById("left-shell-panel");
+  const timeSlider = document.querySelector("arcgis-time-slider");
+
+  //-----------------------------------------
+  //   Define active & next widget states
+  //-----------------------------------------
   const [activeWidget, setActiveWidget] = useState(null);
   const [nextWidget, setNextWidget] = useState(null);
-  const timeSlider = document.querySelector("arcgis-time-slider");
-  const shellPanel: any = document.getElementById("left-shell-panel");
 
-  //--- Read date fields
-  const { data: datefields } = useQuery<DateFieldsType | any>({
-    queryKey: datefieldKeys.selected,
-    queryFn: async () => ({}),
-    staleTime: Infinity,
+  //--- Click action handler function for active & next widget
+  const handleActionClick = (event: any) => {
+    const id = event.target.id;
+    setNextWidget(id);
+    setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
+  };
+
+  //---------------------------------------------
+  //  Call date list for the time slider
+  //---------------------------------------------
+  const { data } = useDateFields(lotLayer);
+
+  useEffect(() => {
+    if (activeWidget) {
+      const actionActiveWidget: any = document.querySelector(
+        `[data-panel-id=${activeWidget}]`,
+      );
+      actionActiveWidget.hidden = true;
+      shellPanel.collapsed = true;
+
+      //------------------------------------------
+      //  Reset timeslider to default state
+      //------------------------------------------
+      if (timeSlider) {
+        timeSlider.timeExtent = null;
+        shellPanel.collapsed = true;
+
+        if (!data) return; // wait until the query has resolved.
+
+        //-- Update As of date
+        updateAsofdate(toAsofdate(data?.latestdate));
+
+        //--- Time-slider off
+        updateTimesliderOn(false);
+
+        //--- Reset to default symbology
+        updateLotSymbology(lot_status_f);
+      }
+    }
+
+    if (nextWidget !== activeWidget) {
+      const actionNextWidget: any = document.querySelector(
+        `[data-panel-id=${nextWidget}]`,
+      );
+      actionNextWidget.hidden = false;
+      shellPanel.collapsed = false;
+
+      //--- Manually collapse shellPanel when
+      if (nextWidget === "timeslider") {
+        shellPanel.collapsed = true;
+      }
+
+      if (nextWidget === "handedover-charts") {
+        shellPanel.collapsed = true;
+      }
+    }
   });
-  const latestasofdate = datefields?.latestasofdate;
-
-  // End of dropdown list
-  if (activeWidget) {
-    const actionActiveWidget: any = document.querySelector(
-      `[data-panel-id=${activeWidget}]`,
-    );
-    actionActiveWidget.hidden = true;
-    shellPanel.collapsed = true;
-
-    if (timeSlider) {
-      timeSlider.timeExtent = null;
-      shellPanel.collapsed = true;
-
-      const year = latestasofdate.getFullYear();
-      const month = latestasofdate.toLocaleString("en-US", {
-        month: "long",
-      });
-      const day = latestasofdate.getDate();
-
-      //-- Update As of date
-      queryClient.setQueryData<DisplayDates | any>(dateDisplayKeys.selected, {
-        asOfDate: `${month} ${day}, ${year}`,
-      });
-
-      //--- Update timeslider state
-      queryClient.setQueryData<TimeSliderState>(timesliderKeys.selected, {
-        timesliderstate: false,
-      });
-
-      updateLotSymbology(lotStatusField);
-    }
-  }
-
-  if (nextWidget !== activeWidget) {
-    const actionNextWidget: any = document.querySelector(
-      `[data-panel-id=${nextWidget}]`,
-    );
-    actionNextWidget.hidden = false;
-    shellPanel.collapsed = false;
-
-    // Timeslider and handedOver charts do not appear in shell-panel so
-    // need to collapse shell-panel manually
-    if (nextWidget === "timeslider") {
-      shellPanel.collapsed = true;
-
-      //--- Update timeslider state
-      queryClient.setQueryData<TimeSliderState>(timesliderKeys.selected, {
-        timesliderstate: true,
-      });
-    }
-  }
 
   return (
     <>
@@ -113,10 +107,7 @@ function ActionPanel() {
             icon="layers"
             text="layers"
             id="layers"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -124,10 +115,7 @@ function ActionPanel() {
             icon="basemap"
             text="basemaps"
             id="basemaps"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -135,32 +123,15 @@ function ActionPanel() {
             icon="sliders-horizontal"
             text="Land Status Change"
             id="timeslider"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
-
-          {/*<CalciteAction
-            data-action-id="charts"
-            icon="graph-time-series"
-            text="Progress Chart"
-            id="charts"
-            onClick={(event) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
-          ></CalciteAction>*/}
 
           <calcite-action
             data-action-id="information"
             icon="information"
             text="Information"
             id="information"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
         </calcite-action-bar>
 
@@ -169,7 +140,6 @@ function ActionPanel() {
             referenceElement="arcgis-map"
             selectionMode="multiple"
             visibilityAppearance="checkbox"
-            // show-collapse-button
             show-filter
             filter-placeholder="Filter layers"
             listItemCreatedFunction={defineActions}
@@ -182,12 +152,12 @@ function ActionPanel() {
 
         <calcite-panel data-panel-id="timeslider" hidden></calcite-panel>
 
-        {/* <CalcitePanel
-          class="timeSeries-panel"
+        <calcite-panel
+          className="timeSeries-panel"
           height-scale="l"
           data-panel-id="charts"
           hidden
-        ></CalcitePanel> */}
+        ></calcite-panel>
 
         <calcite-panel heading="Description" data-panel-id="information" hidden>
           {nextWidget === "information" ? (
@@ -208,14 +178,13 @@ function ActionPanel() {
             </div>
           ) : (
             <div className="informationDiv" hidden></div>
-            // <div className="informationDiv" hidden></div>
           )}
         </calcite-panel>
       </calcite-shell-panel>
 
-      {nextWidget === "timeslider" &&
-        !activeWidget &&
-        nextWidget !== activeWidget && <Timeslider />}
+      {nextWidget === "timeslider" && nextWidget !== activeWidget && (
+        <Timeslider />
+      )}
     </>
   );
 }
