@@ -1,0 +1,1 @@
+import{v as c,w as u,D as f}from"./operatorConvexHull-xhENoju7.js";import{kP as i,kQ as r,kS as m,kU as p}from"./index-BSEgPAvM.js";function g(e){const t=i(e);return r(c(t.getGeometry()),t.getSpatialReference())}function l(e,t={}){const{merge:a=!1}=t,[n,o]=m(e);return u(n,a).map(s=>r(s,o))}function v(e){return f(p(e))}export{g as execute,l as executeMany,v as isConvex};

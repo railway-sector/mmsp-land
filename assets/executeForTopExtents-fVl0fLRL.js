@@ -1,0 +1,1 @@
+import{dr as i,lh as r,bh as m}from"./index-BSEgPAvM.js";import{c as x}from"./queryTopFeatures-D-EETEm7.js";async function N(n,o,e){const s=i(n),a=await x(s,r.from(o),{...e}),t=a.data.extent;return!t||isNaN(t.xmin)||isNaN(t.ymin)||isNaN(t.xmax)||isNaN(t.ymax)?{count:a.data.count,extent:null}:{count:a.data.count,extent:m.fromJSON(t)}}export{N as executeForTopExtents};
