@@ -8,14 +8,11 @@ import {
   tobeHandedOverLotLayer,
 } from "../layers";
 import {
-  pieChartData,
   thousands_separators,
   zoomToLayer,
   fieldStatistic,
   useDateFields,
   toAsofdate,
-  makeQuery,
-  PieChartRender,
 } from "../query";
 import "@esri/calcite-components/components/calcite-checkbox";
 import "@esri/calcite-components/components/calcite-label";
@@ -30,11 +27,11 @@ import {
   lot_status_q,
   lot_type_f,
   lot_xho_f,
+  opacity,
   valueColor,
   white_bkColor,
 } from "../uniqueValues";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
-// import { chartRenderer } from "../chartRenderer";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import { queryDefinitionExpression } from "../queryDefinition";
@@ -44,9 +41,118 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
-import ChartPieSeriesRender from "chart-pie-series-render";
+// import ChartPieSeriesRender from "chart-pie-series-render";
 import { MyContext } from "../contexts/MyContext";
 import ChartPieSeries from "chart-pie-series";
+import ChartPieSeriesRender from "../chartrender";
+import QueryExpressionLayers from "query-layers-expression";
+
+function useLotData(
+  cpackage: string,
+  landtype: string,
+  landsection: string,
+  statusField: string,
+  hoField: string,
+  xhoField: string,
+  baseFilter: any,
+) {
+  return useQuery<ChartResponse | any>({
+    queryKey: [
+      cpackage,
+      landtype,
+      landsection,
+      statusField,
+      lot_status_f,
+      lotLayer,
+      baseFilter,
+    ],
+    queryFn: async () => {
+      const q1 = new QueryExpressionLayers({
+        ...baseFilter,
+      });
+
+      const q2 = new QueryExpressionLayers({
+        ...baseFilter,
+        qExpression: `${statusField} IS NULL`,
+      });
+
+      queryDefinitionExpression({
+        queryExpression: q1.queryExpression(),
+        featureLayer: [
+          lotLayer,
+          handedOverLotLayer,
+          publicLotLayer,
+          tobeHandedOverLotLayer,
+          subterraenanLots18_layer,
+        ],
+      });
+
+      const sharedArgs = { where: q1.queryExpression(), layer: lotLayer };
+
+      const [chartData, totaln, publicn, total_ho, total_tobe_ho] =
+        await Promise.all([
+          //--- chart data
+          new ChartPieSeries({
+            ...sharedArgs,
+            statusList: lot_status_q,
+            statusField: statusField,
+            statisticField: statusField,
+            statisticType: "count",
+          }).pieSeries(),
+
+          //--- total number of lots (public + private)
+          fieldStatistic({
+            ...sharedArgs,
+            statisticField: lot_id_f,
+            statisticType: "count",
+          }),
+
+          //--- Public lot
+          fieldStatistic({
+            where: q2.queryExpression(),
+            layer: lotLayer,
+            statisticField: lot_id_f,
+            statisticType: "count",
+          }),
+
+          //--- Number of handed-over lots (GC to JV)
+          fieldStatistic({
+            ...sharedArgs,
+            statisticField: hoField,
+            statisticType: "sum",
+          }),
+
+          //--- Number of To-be-handed-over lots (to JV)
+          fieldStatistic({
+            ...sharedArgs,
+            statisticField: xhoField,
+            statisticType: "sum",
+          }),
+        ]);
+
+      //--- Percent handed over
+      const perc_ho = ((total_ho / totaln) * 100).toFixed(1);
+
+      //--- Percent to-be-handed-over
+      const perc_tobe_ho = ((total_tobe_ho / totaln) * 100).toFixed(1);
+
+      return {
+        chartData: chartData || [],
+        totaln,
+        publicn,
+        total_ho,
+        total_tobe_ho,
+        perc_ho,
+        perc_tobe_ho,
+        q1,
+      };
+    },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    // staleTime: Infinity,
+  });
+}
 
 const ChartLot = () => {
   const {
@@ -63,7 +169,6 @@ const ChartLot = () => {
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
   const [isbkSwitch, setIsBkSwitch] = useState<boolean>(false);
-  const firstLoad = useRef<boolean>(true);
 
   //--- Initial date to display
   const { data: dateList } = useDateFields(lotLayer);
@@ -85,108 +190,27 @@ const ChartLot = () => {
     [isbkSwitch],
   );
 
-  //--- New status field by timeslider state
-  const stats_field = timesliderOn ? newStatusField : lot_status_f;
-
-  //--- Common qValues and qFields for QueryExpressionLayers class
-  const qV = [cpackage, landtype, landsection];
-  const qF = [cp_f, lot_type_f, lot_section_f];
-  const queryc = makeQuery(qV, qF);
+  //--- Base filter
+  const baseFilter = {
+    qFields: [cp_f, lot_type_f, lot_section_f],
+    qValues: [cpackage, landtype, landsection],
+  };
 
   //--- Generate chart data
-  const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [
-      cpackage,
-      landtype,
-      landsection,
-      newStatusField,
-      lot_status_f,
-      timesliderOn,
-      lotLayer,
-    ],
-    queryFn: async () => {
-      queryDefinitionExpression({
-        queryExpression: queryc.queryExpression(),
-        featureLayer: [
-          lotLayer,
-          handedOverLotLayer,
-          publicLotLayer,
-          tobeHandedOverLotLayer,
-          subterraenanLots18_layer,
-        ],
-      });
+  const { data, isLoading } = useLotData(
+    cpackage,
+    landtype,
+    landsection,
+    timesliderOn ? newStatusField : lot_status_f,
+    timesliderOn ? newJvField : lot_ho_f,
+    timesliderOn ? newNyField : lot_xho_f,
+    baseFilter,
+  );
 
-      const [chartData, totaln, total_ho, total_tobe_ho] = await Promise.all([
-        //--- chart data
-        pieChartData({
-          piechart: new ChartPieSeries(),
-          qChart: queryc,
-          layer: lotLayer,
-          statusList: lot_status_q,
-          statusField: stats_field,
-          statisticField: stats_field,
-          statisticType: "count",
-        }),
-
-        //--- total number of lots (public + private)
-        fieldStatistic({
-          qChart: queryc.queryExpression(),
-          layer: lotLayer,
-          statisticField: lot_id_f,
-          statisticType: "count",
-        }),
-
-        //--- Number of handed-over lots (GC to JV)
-        fieldStatistic({
-          qChart: queryc.queryExpression(),
-          layer: lotLayer,
-          statisticField: timesliderOn ? newJvField : lot_ho_f,
-          statisticType: "sum",
-        }),
-
-        //--- Number of To-be-handed-over lots (to JV)
-        fieldStatistic({
-          qChart: queryc.queryExpression(),
-          layer: lotLayer,
-          statisticField: timesliderOn ? newNyField : lot_xho_f,
-          statisticType: "sum",
-        }),
-      ]);
-
-      //--- Public lot number
-      const public_lotn = totaln - chartData[1];
-
-      //--- Percent handed over
-      const perc_ho = ((total_ho / totaln) * 100).toFixed(1);
-
-      //--- Percent to-be-handed-over
-      const perc_tob_ho = ((total_tobe_ho / totaln) * 100).toFixed(1);
-
-      //--- Only zoom on subsequent (non-initial) fetches
-      if (!firstLoad.current) {
-        if (!timesliderOn) zoomToLayer(lotLayer, arcgisMap);
-      }
-      firstLoad.current = false;
-
-      return {
-        chartData: chartData[0] || [],
-        lotNumber: totaln,
-        publicn: public_lotn,
-        total_ho: total_ho,
-        total_tob_ho: total_tobe_ho,
-        perc_ho: perc_ho,
-        perc_tobe_ho: perc_tob_ho,
-      };
-    },
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    // staleTime: Infinity,
-  });
   const chartData = data?.chartData || [];
-  const lotNumber = data?.lotNumber || 0;
+  const lotNumber = data?.totaln || 0;
   const total_handedOver = data?.total_ho || 0;
-  const total_tobe_handedOver = data?.total_tob_ho || 0;
+  const total_tobe_handedOver = data?.total_tobe_ho || 0;
   const public_lotn = data?.publicn || 0;
   const perc_handedOver = data?.perc_ho || 0;
   const perce_tobe_handedOver = data?.perc_tobe_ho || 0;
@@ -194,8 +218,6 @@ const ChartLot = () => {
   // Chart Resize parameters
   const new_fontSize = chartPanelwidth / 28;
   const new_valueSize = chartPanelwidth / 16;
-  const new_imageSize = chartPanelwidth * 0.026;
-  // const new_asofDateSize = chartPanelwidth * 0.032;
   const new_pieSeriesScale = 220;
   const new_pieInnerValueFontSize = "1.1rem";
   const new_pieInnerLabelFontSize = "0.45em";
@@ -206,7 +228,19 @@ const ChartLot = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "pie-two";
 
+  const zoomFiltersRef = useRef(
+    `${cpackage}-${landtype}-${landsection}-${timesliderOn}`,
+  );
+
+  //---  Pie Chart Renderer
   useEffect(() => {
+    const currentZoomFilters = `${cpackage}-${landtype}-${landsection}-${timesliderOn}`;
+
+    if (currentZoomFilters !== zoomFiltersRef.current) {
+      zoomFiltersRef.current = currentZoomFilters;
+      if (!timesliderOn) zoomToLayer(lotLayer, arcgisMap?.view);
+    }
+
     const root = rootSetter({ chartID: chartID });
     const chart = chartSetter(root);
     chartRef.current = chart;
@@ -221,6 +255,11 @@ const ChartLot = () => {
       innerRadius: 28,
       scale: 1.7,
     });
+
+    pieSeries.slices.template.setAll({
+      fillOpacity: 0.9,
+    });
+
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
 
@@ -235,19 +274,19 @@ const ChartLot = () => {
     legend.data.setAll(pieSeries.dataItems);
 
     // chart renderer
-    PieChartRender({
-      render: new ChartPieSeriesRender(),
+    new ChartPieSeriesRender({
       chart,
       pieSeries: pieSeries,
       legend,
       root,
-      qChart: queryc,
+      qChart: data?.q1,
       q2Expression: undefined,
-      status_field: stats_field,
+      status_field: timesliderOn ? newStatusField : lot_status_f,
       view: arcgisMap?.view,
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
       seriesScale: new_pieSeriesScale,
+      seriesOpacity: opacity,
       innerLabel: "PRIVATE LOTS",
       innerLabelFontSize: new_pieInnerLabelFontSize,
       innerValueFontSize: new_pieInnerValueFontSize,
@@ -255,7 +294,7 @@ const ChartLot = () => {
       statusArray: lot_status_q,
       bkg_color_switch: isbkSwitch,
       seriesFillHash: undefined,
-    });
+    }).chartDataRenderer();
 
     return () => {
       root.dispose();
@@ -269,18 +308,7 @@ const ChartLot = () => {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <img
-          src="https://eijigorilla.github.io/Symbols/Land_Acquisition/Land_Logo2.png"
-          alt="Land Logo"
-          height={`${new_imageSize}%`}
-          width={`${new_imageSize}%`}
-          style={{
-            paddingTop: "1%",
-            paddingLeft: "4%",
-            opacity: isLoading ? 0 : 1,
-          }}
-        />
+      <div style={{ display: "flex", justifyContent: "center", gap: "65px" }}>
         <dl style={{ alignItems: "center" }}>
           <dt style={{ color: label_col, fontSize: `${new_fontSize}px` }}>
             TOTAL LOTS
@@ -335,8 +363,7 @@ const ChartLot = () => {
           height: "55vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
-          marginTop: "4%",
-          marginBottom: "3%",
+          marginTop: "5%",
           opacity: isLoading ? 0 : 1,
         }}
       ></div>
@@ -399,7 +426,6 @@ const ChartLot = () => {
           display: "flex",
           justifyContent: "flex-end",
           marginRight: "3%",
-          marginTop: "1%",
         }}
       >
         <span style={{ marginRight: "5px" }}>BLK BG</span>
@@ -412,6 +438,6 @@ const ChartLot = () => {
       </div>
     </>
   );
-}; // End of lotChartgs
+};
 
 export default ChartLot;

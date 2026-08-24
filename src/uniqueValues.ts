@@ -192,10 +192,10 @@ export const station_labels = new LabelClass({
   labelExpressionInfo: { expression: "$feature.Station1" },
   symbol: {
     type: "text",
-    color: "black",
-    haloColor: "white",
-    haloSize: 1,
-    font: { size: 10, weight: "bold" },
+    color: "white",
+    haloColor: "black",
+    haloSize: 0.5,
+    font: { size: 10 },
   },
 });
 
@@ -228,15 +228,36 @@ export const lot_section_f = "Station1";
 export const lot_remarks_f = "REMARKS";
 export const lot_issue_f = "Issue";
 
+export const opacity = 0.7;
 export const lot_status_q = [
-  { value: 1, category: "Paid", color: "#70ad47" },
-  { value: 2, category: "For Payment Processing", color: "#0070ff" },
-  { value: 3, category: "For Legal Pass", color: "#ffff00" },
-  { value: 4, category: "For Appraisal/Offer to Buy", color: "#ffaa00" },
-  { value: 5, category: "For Expro", color: "#ff0000" },
-  { value: 6, category: "with WOP Fully Turned-over", color: "#00734c" },
-  { value: 7, category: "ROWUA/TUA", color: "#55ff00" },
-  { value: 8, category: "Signed ROWUA/TUA", color: "#C1E1C1" },
+  { value: 1, category: "Paid", color: `rgba(112, 173, 71, ${opacity})` },
+  {
+    value: 2,
+    category: "For Payment Processing",
+    color: `rgba(0, 112, 255, ${opacity})`,
+  },
+  {
+    value: 3,
+    category: "For Legal Pass",
+    color: `rgba(255, 255, 0, ${opacity})`,
+  },
+  {
+    value: 4,
+    category: "For Appraisal/Offer to Buy",
+    color: `rgba(255, 170, 0, ${opacity})`,
+  },
+  { value: 5, category: "For Expro", color: `rgba(255, 0, 0, ${opacity})` },
+  {
+    value: 6,
+    category: "with WOP Fully Turned-over",
+    color: `rgba(0, 115, 76, ${opacity})`,
+  },
+  { value: 7, category: "ROWUA/TUA", color: `rgba(85, 255, 0, ${opacity})` },
+  {
+    value: 8,
+    category: "Signed ROWUA/TUA",
+    color: `rgba(193, 225, 193, ${opacity})`,
+  },
 ];
 
 export const lot_symbol = new SimpleFillSymbol({
@@ -291,6 +312,7 @@ export const lot_public_renderer = new UniqueValueRenderer({
     { value: "withStatus", symbol: null },
     {
       value: "publicLands",
+      label: " ",
       symbol: new SimpleFillSymbol({
         color: "#d8cdcdff",
         style: "diagonal-cross",

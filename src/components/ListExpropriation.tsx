@@ -24,7 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { memo, use, useMemo } from "react";
 import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { MyContext } from "../contexts/MyContext";
-import { makeQuery } from "../query";
+import QueryExpressionLayers from "query-layers-expression";
 
 //--- Zoom in to selected lot from expropriation list
 let highlightSelect: any;
@@ -69,15 +69,17 @@ const ListExpropriation = memo(() => {
     e.category.includes("For Expro"),
   )[0]?.value;
 
-  //--- Make query expression
-  const qV = [cpackage, landtype, landsection];
-  const qF = [cp_f, lot_type_f, lot_section_f];
-  const queryc_exp = makeQuery(qV, qF, `${lot_status_f} = ${exproV}`);
+  //--- Query expression
+  const q = new QueryExpressionLayers({
+    qFields: [cp_f, lot_type_f, lot_section_f],
+    qValues: [cpackage, landtype, landsection],
+    qExpression: `${lot_status_f} = ${exproV}`,
+  });
 
   //--- Obtain queried Features
   const { data } = useQuery<any>({
     queryKey: [cpackage, landtype, landsection, lot_status_f],
-    queryFn: () => queryFeatures({ layer: lotLayer, queryc: queryc_exp }),
+    queryFn: () => queryFeatures({ layer: lotLayer, queryc: q }),
     select: (response) => {
       return response.features;
     },

@@ -200,6 +200,8 @@ export const publicLotLayer = new FeatureLayer({
   title: "Public Lot",
   labelingInfo: [lot_id_label],
   renderer: lot_public_renderer,
+  minScale: 50000,
+  maxScale: 0,
   definitionExpression: "StatusNVS3 IS NULL",
   popupTemplate: lot_public_popup,
 });

@@ -1,11 +1,6 @@
 import { useRef, useState, useEffect, memo, use } from "react";
 import { isfLayer } from "../layers";
-import {
-  makeQuery,
-  pieChartData,
-  PieChartRender,
-  thousands_separators,
-} from "../query";
+import { fieldStatistic, thousands_separators } from "../query";
 import { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
 import {
   cp_f,
@@ -29,6 +24,55 @@ import {
 import ChartPieSeriesRender from "chart-pie-series-render";
 import { MyContext } from "../contexts/MyContext";
 import ChartPieSeries from "chart-pie-series";
+import QueryExpressionLayers from "query-layers-expression";
+
+//--------------------------//
+//     useNloData     //
+//--------------------------//
+function useIsfData(
+  municipality: string,
+  barangay: string,
+  statusField: string,
+  baseFilter: any,
+) {
+  return useQuery<ChartResponse | any>({
+    queryKey: [municipality, barangay, statusField, isfLayer],
+    queryFn: async () => {
+      const q1 = new QueryExpressionLayers({
+        ...baseFilter,
+        qExpression: `${isf_status_f} IS NOT NULL`,
+      });
+
+      queryDefinitionExpression({
+        queryExpression: q1.queryExpression(),
+        featureLayer: [isfLayer],
+      });
+
+      const baseArgs = {
+        layer: isfLayer,
+        statisticField: "OBJECTID",
+        statisticType: "count" as const,
+      };
+
+      const [chartData, totalNumber] = await Promise.all([
+        new ChartPieSeries({
+          ...baseArgs,
+          where: q1.queryExpression(),
+          statusList: isf_status_q,
+          statusField: isf_status_f,
+        }).pieSeries(),
+
+        fieldStatistic({
+          ...baseArgs,
+          where: new QueryExpressionLayers({ ...baseFilter }).queryExpression(),
+        }),
+      ]);
+
+      return { chartData, totalNumber, q1 };
+    },
+    staleTime: Infinity,
+  });
+}
 
 const ChartIsf = memo(() => {
   const { cpackage, landtype, landsection } = use(MyContext);
@@ -36,37 +80,19 @@ const ChartIsf = memo(() => {
   const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
-  //--- Generate Chart data
-  const qV = [cpackage, landtype, landsection];
-  const qF = [cp_f, lot_type_f, lot_section_f];
-  const queryc_isf = makeQuery(qV, qF, `${isf_status_f} IS NOT NULL`);
+  //--- Base filter
+  const baseFilter = {
+    qFields: [cp_f, lot_type_f, lot_section_f],
+    qValues: [cpackage, landtype, landsection],
+  };
 
   //--- 2. Streamlined Data Fetching with useQuery
-  const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [cpackage, landtype, landsection, isf_status_f],
-    queryFn: async () => {
-      queryDefinitionExpression({
-        queryExpression: queryc_isf.queryExpression(),
-        featureLayer: [isfLayer],
-      });
-
-      const chartData = await pieChartData({
-        piechart: new ChartPieSeries(),
-        qChart: queryc_isf,
-        layer: isfLayer,
-        statusList: isf_status_q,
-        statusField: isf_status_f,
-        statisticField: isf_status_f,
-        statisticType: "count",
-      });
-
-      return {
-        chartData: chartData[0] || [],
-        totalNumber: chartData[1],
-      };
-    },
-    staleTime: Infinity,
-  });
+  const { data, isLoading } = useIsfData(
+    cpackage,
+    landtype,
+    landsection,
+    baseFilter,
+  );
   const chartData = data?.chartData || [];
   const totaln = data?.totalNumber || 0;
 
@@ -114,13 +140,12 @@ const ChartIsf = memo(() => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    PieChartRender({
-      render: new ChartPieSeriesRender(),
+    new ChartPieSeriesRender({
       chart,
       pieSeries: pieSeries,
       legend,
       root,
-      qChart: queryc_isf,
+      qChart: data?.q1,
       q2Expression: undefined,
       status_field: isf_status_f,
       view: arcgisMap?.view,
@@ -134,7 +159,7 @@ const ChartIsf = memo(() => {
       statusArray: isf_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
-    });
+    }).chartDataRenderer();
 
     return () => {
       root.dispose();

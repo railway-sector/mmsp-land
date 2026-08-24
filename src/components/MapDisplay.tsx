@@ -43,9 +43,9 @@ export default function MapDisplay() {
       structuresGroupLayer,
       isfLayer,
       boundaryGroupLayer,
-      stationLayer,
       alignmentLine,
       accessRoadOptionsGroupLayer,
+      stationLayer,
     ]);
 
     arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
@@ -61,8 +61,8 @@ export default function MapDisplay() {
         id="test-map"
         basemap="dark-gray-vector"
         ground="world-elevation"
-        center="121.0194387, 14.6972616"
-        zoom={10}
+        center="121.0194387, 14.6272616"
+        zoom={11}
         onarcgisViewReadyChange={(event: any) => {
           setMapView(event.target);
         }}

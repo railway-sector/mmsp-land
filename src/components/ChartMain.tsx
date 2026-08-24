@@ -54,7 +54,7 @@ function ChartMain() {
           borderBottomWidth: 5,
           borderColor: "#555555",
           width: panelWidth,
-          overflowY: "auto",
+          overflow: "hidden",
           display: "block", // without adding display, background will not disappear.
         }}
         onClick={handlePanelCollapse}
