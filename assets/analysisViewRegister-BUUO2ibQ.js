@@ -1,1 +1,0 @@
-import{bY as f,a5 as c}from"./index-C5PuQHZ9.js";function d(){const r=new WeakMap,a=(e,o)=>{const t=r.get(e);t&&(t.delete(o),t.size===0&&r.delete(e))};return{register:(e,o)=>(f(r,e,()=>new Set).add(o),c(()=>a(e,o))),forEveryOther(e,o,t){const n=r.get(e);if(n)for(const s of n)s!==o&&t(s)}}}export{d as o};

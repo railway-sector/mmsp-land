@@ -1,1 +1,0 @@
-import{ag as s,ah as c}from"./index-C5PuQHZ9.js";const u=new s;function f(n,t,e,r){return u.execute(n,t,e,r,null)}function i(n,t,e,r){const o=u.executeMany(new c(n),t,e,r,null);return Array.from(o)}function l(){return u.supportsCurves()}export{i as o,f as t,l as u};

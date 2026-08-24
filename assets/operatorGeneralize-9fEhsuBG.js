@@ -1,0 +1,1 @@
+import{kW as o,ah as c}from"./index-DklaDf-x.js";const u=new o;function a(n,t,r){return u.execute(n,t,r,null)}function f(n,t,r){const e=u.executeMany(new c(n),t,r,null);return Array.from(e)}function i(){return u.supportsCurves()}export{f as o,a as t,i as u};
