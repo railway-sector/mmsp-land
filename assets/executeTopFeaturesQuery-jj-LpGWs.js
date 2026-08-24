@@ -1,1 +1,0 @@
-import{dr as f,lh as c,co as i}from"./index-BSEgPAvM.js";import{m as n}from"./queryTopFeatures-D-EETEm7.js";async function $(r,o,a,t){const e=f(r),m={...t},{data:s}=await n(e,c.from(o),a,m);return i.fromJSON(s)}export{$ as executeTopFeaturesQuery};
