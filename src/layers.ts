@@ -40,7 +40,7 @@ export const stationBoxLayer = new FeatureLayer({
   portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 2,
   renderer: station_box_renderer,
-  minScale: 150000,
+  minScale: 50000,
   maxScale: 0,
   title: "Station Box",
   popupEnabled: false,
@@ -52,7 +52,7 @@ export const senateStationBoxOld = new FeatureLayer({
   portalItem: portalItems("791f47c19d054cf88dd85fa5a4b4c991"),
   layerId: 25,
   renderer: old_senate_stbox_renderer,
-  minScale: 150000,
+  minScale: 50000,
   maxScale: 0,
   title: "Senate Old Station Box",
   popupEnabled: false,
@@ -94,6 +94,8 @@ export const evsLayer = new FeatureLayer({
   layerId: 1,
   title: "East Valenzuela Station",
   renderer: evs_station_renderer,
+  minScale: 50000,
+  maxScale: 0,
   popupEnabled: false,
 });
 
@@ -128,6 +130,8 @@ export const depotBuildingLayer = new FeatureLayer({
   portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
   layerId: 6,
   title: "Depot Building",
+  minScale: 50000,
+  maxScale: 0,
   popupEnabled: false,
 });
 
@@ -136,6 +140,8 @@ export const bssDepotBuildingLayer = new FeatureLayer({
   portalItem: portalItems("0c172b82ddab44f2bb439542dd75e8ae"),
   layerId: 7,
   title: "BSS Building",
+  minScale: 50000,
+  maxScale: 0,
   popupEnabled: false,
 });
 
@@ -152,6 +158,8 @@ export const creekDivLayer = new FeatureLayer({
   portalItem: portalItems("52d4f29105934e3f95f6b39c7e5fba6e"),
   layerId: 3,
   title: "Creek Diversion",
+  minScale: 50000,
+  maxScale: 0,
   popupEnabled: false,
 });
 
