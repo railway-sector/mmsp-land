@@ -1,0 +1,1 @@
+import{bb as b,bc as e,bd as h,be as m,bf as f}from"./index-BtfVDnMY.js";import{t as u}from"./densificationConstants-ZMprCQNP.js";function g(t,n,i,o){const{height:r,width:a}=o??c(t),s=Math.min(a/n,r/i)*u();return b(t,{maxDeviation:s})}function c(t){const n=e(h(),t);return{width:f(n),height:m(n)}}export{g as n};
