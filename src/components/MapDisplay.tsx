@@ -1,79 +1,71 @@
-import "@arcgis/map-components/components/arcgis-expand";
-import "@arcgis/map-components/components/arcgis-legend";
-import "@arcgis/map-components/components/arcgis-map";
-import "@arcgis/map-components/components/arcgis-scene";
-import "@arcgis/map-components/components/arcgis-search";
-import "@arcgis/map-components/components/arcgis-zoom";
-import "@esri/calcite-components/components/calcite-shell";
-import "@esri/calcite-components/components/calcite-navigation";
-import "@esri/calcite-components/components/calcite-navigation-logo";
-import type { ArcgisMap } from "@arcgis/map-components/components/arcgis-map";
-import "@arcgis/ai-components/components/arcgis-assistant";
-import "@arcgis/ai-components/components/arcgis-assistant-data-exploration-agent";
-import "@arcgis/ai-components/components/arcgis-assistant-navigation-agent"; // if you uncomment this below
-import "@arcgis/ai-components/components/arcgis-assistant-help-agent";
+import "../index.css";
 
-import {
-  accessRoadOptionsGroupLayer,
-  alignmentLine,
-  boundaryGroupLayer,
-  depotBuildingsGroupLayer,
-  evsBoundaryPoGroupLayer,
-  isfLayer,
-  lotGroupLayer,
-  sources,
-  stationLayer,
-  structuresGroupLayer,
-} from "../layers";
-import type { ArcgisSearch } from "@arcgis/map-components/components/arcgis-search";
-import { addLayersToMap } from "../query";
-import { useState } from "react";
+import "@arcgis/map-components/components/arcgis-compass";
+import "@arcgis/map-components/components/arcgis-map";
+
+import { useEffect, useRef } from "react";
+
+import type { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
+import type MapView from "@arcgis/core/views/MapView";
+
+import { landGroupLayer, stationLayer, structuresGroupLayer, isfLayer, ortigasStationGroupLayer, alignmentLayer, eastValenzualaStationGroupLayer, depotBuildingsGroupLayer,
+          boundaryGroupLayer, senateDepEdStationGroupLayer
+ } from "../layers";
+import { useTimeSliderToggle } from "../contexts/TimeSliderContext";
+import TimeSlider from "./TimeSlider";
+
+// Module-level (not a React ref) so LotChart/ISFChart can import it and
+// call goTo() directly, without threading the view through context.
+export const mapView: { current: MapView | null } = { current: null };
 
 export default function MapDisplay() {
-  const arcgisMap = document.querySelector("arcgis-map") as ArcgisMap;
-  const arcgisSearch = document.querySelector("arcgis-search") as ArcgisSearch;
-  const [_mapView, setMapView] = useState<any>();
+  const mapRef = useRef<ArcgisMap | null>(null);
+  const viewRef = useRef<MapView | null>(null);
 
-  //--- Add layers to scene view
-  arcgisMap?.viewOnReady(() => {
-    addLayersToMap(arcgisMap?.map, [
-      lotGroupLayer,
-      depotBuildingsGroupLayer,
-      evsBoundaryPoGroupLayer,
-      structuresGroupLayer,
-      isfLayer,
-      boundaryGroupLayer,
-      alignmentLine,
-      accessRoadOptionsGroupLayer,
-      stationLayer,
-    ]);
+  const { showTimeSlider } = useTimeSliderToggle();
 
-    arcgisSearch.allPlaceholder = "LotID, StructureID, Chainage";
-    arcgisSearch.includeDefaultSourcesDisabled = true;
-    arcgisSearch.locationDisabled = true;
-    arcgisMap.hideAttribution = true;
-    arcgisSearch?.sources.push(...sources);
-  });
+  // ----------------------------------------------------
+  // EFFECT 1: One-time map setup.
+  // ----------------------------------------------------
+  useEffect(() => {
+    const initializeMap = async () => {
+      if (!mapRef.current) return;
+
+      await mapRef.current.viewOnReady();
+
+      viewRef.current = mapRef.current.view;
+
+      if (!viewRef.current) return;
+
+      // Publish the view so LotChart/ISFChart can drive goTo() themselves.
+      mapView.current = viewRef.current;
+
+      viewRef.current.map?.add(landGroupLayer);
+      viewRef.current.map?.add(structuresGroupLayer);
+      viewRef.current.map?.add(isfLayer);
+      viewRef.current.map?.add(boundaryGroupLayer);
+      viewRef.current.map?.add(depotBuildingsGroupLayer);
+      viewRef.current.map?.add(senateDepEdStationGroupLayer);
+      viewRef.current.map?.add(ortigasStationGroupLayer);
+      viewRef.current.map?.add(eastValenzualaStationGroupLayer);
+      viewRef.current.map?.add(alignmentLayer);
+      viewRef.current.map?.add(stationLayer);
+    };
+
+    initializeMap();
+  }, []);
 
   return (
-    <>
-      <arcgis-map
-        id="test-map"
-        basemap="dark-gray-vector"
-        ground="world-elevation"
-        center="121.0194387, 14.6272616"
-        zoom={11}
-        onarcgisViewReadyChange={(event: any) => {
-          setMapView(event.target);
-        }}
-      >
-        <arcgis-compass slot="top-right"></arcgis-compass>
-        <arcgis-expand close-on-esc slot="top-right" mode="floating">
-          <arcgis-search></arcgis-search>
-        </arcgis-expand>
-        <arcgis-zoom slot="bottom-right"></arcgis-zoom>
-        <arcgis-locate slot="top-right"></arcgis-locate>
-      </arcgis-map>
-    </>
+    <arcgis-map
+      id="mmsp-map"
+      ref={mapRef}
+      basemap="topo-vector"
+      ground="world-elevation"
+      center="121.04128024704018, 14.607106959078035"
+      zoom={12}
+    >
+      <arcgis-compass slot="top-right" />
+      {showTimeSlider && <TimeSlider />}
+    </arcgis-map>
   );
 }

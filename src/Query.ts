@@ -1,261 +1,120 @@
-import { dateTable, lotLayer } from "./layers";
-import { cp_f, lot_symbol, lot_uniqueV } from "./uniqueValues";
-import UniqueValueRenderer from "@arcgis/core/renderers/UniqueValueRenderer";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import type { statisticsType } from "./interfaceKeys";
 import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
 import Query from "@arcgis/core/rest/support/Query";
-import { useQuery } from "@tanstack/react-query";
-import { datefieldKeys } from "./interfaceKeys";
-import type { DateFieldsType } from "./interfaceKeys";
 
-//---------------------------------------------------------//
-//                 Add Layers to Map                      //
-//---------------------------------------------------------//
-export function addLayersToMap(map: any, layersList: any[]) {
-  layersList.forEach((layer: any) => {
-    map.add(layer);
-  });
+// Builds a base Query — where-clause comes from the caller
+// (QueryExpressionLayers), this just wires it up to run
+function createQuery(where?: string) {
+  const query = new Query();
+  query.where = where ?? "1=1";
+  query.outFields = [];
+  query.returnGeometry = false;
+  return query;
 }
 
-//---------------------------------------------------------//
-//    Definition Expression using queryExpression          //
-//---------------------------------------------------------//
-interface queryDefinitionExpressionType {
-  queryExpression?: string;
-  featureLayer?:
-    | [FeatureLayer, FeatureLayer?, FeatureLayer?, FeatureLayer?, FeatureLayer?]
-    | any;
-}
+type StatisticType =
+  | "count"
+  | "sum"
+  | "min"
+  | "max"
+  | "avg"
+  | "stddev"
+  | "var"
+  | "exceedslimit"
+  | "percentile-continuous"
+  | "percentile-discrete"
+  | "envelope-aggregate"
+  | "convex-hull-aggregate";
 
-export function queryDefinitionExpression({
-  queryExpression,
-  featureLayer,
-}: queryDefinitionExpressionType) {
-  if (!queryExpression || !featureLayer) return;
-  const layers = Array.isArray(featureLayer) ? featureLayer : [featureLayer];
-  layers.forEach(
-    (layer: any) => layer && (layer.definitionExpression = queryExpression),
-  );
-}
+// ----------------------------------------------------
+// FIELD STATISTIC
+// One number for a single stat (total, public, handed-over, etc).
+// Fire several in parallel via Promise.all for a chart's summary row.
+// ----------------------------------------------------
 
-//--- Separate calculation
-interface FieldStatisticType {
-  where: any;
+type FieldStatisticArgs = {
+  where?: string;
   layer: any;
-  statisticField: any;
-  statisticType: statisticsType;
-}
+  statisticField: string;
+  statisticType: StatisticType;
+};
 
 export async function fieldStatistic({
   where,
   layer,
   statisticField,
   statisticType,
-}: FieldStatisticType) {
-  //--- Query
-  const query = new Query({
-    where: where,
-    outStatistics: [
-      new StatisticDefinition({
-        onStatisticField: statisticField,
-        outStatisticFieldName: "statsCollect",
-        statisticType,
-      }),
-    ],
-  });
+}: FieldStatisticArgs): Promise<number> {
+  const query = createQuery(where);
+  const OUT_FIELD = "result";
 
-  const response = await layer?.queryFeatures(query);
-  return response.features[0].attributes.statsCollect;
-}
-
-//---------------------------------------------//
-//           Lot (handed over area)            //
-//---------------------------------------------//
-interface HandedOverArea {
-  aa_field: any;
-  hoa_field: any;
-  cp_list: any;
-  layer: any;
-}
-export async function handedOverAreaByContractp({
-  aa_field,
-  hoa_field,
-  cp_list,
-  layer,
-}: HandedOverArea) {
-  const outStatistics = [
+  query.outStatistics = [
     new StatisticDefinition({
-      onStatisticField: aa_field,
-      outStatisticFieldName: "aa",
-      statisticType: "sum",
-    }),
-
-    new StatisticDefinition({
-      onStatisticField: hoa_field,
-      outStatisticFieldName: "hoa",
-      statisticType: "sum",
+      onStatisticField: statisticField,
+      outStatisticFieldName: OUT_FIELD,
+      statisticType,
     }),
   ];
 
-  return Promise.all(
-    cp_list.map(async (cp: any) => {
-      const query = new Query({
-        where: `CP = '${cp}' AND ${cp_f} IS NOT NULL`,
-        outStatistics: outStatistics,
-      });
+  const response = await layer.queryFeatures(query);
+  return response.features[0]?.attributes[OUT_FIELD] ?? 0;
+}
 
-      const response = await layer?.queryFeatures(query);
-      const { aa, hoa } = response.features[0].attributes;
-      const value = aa ? ((hoa / aa) * 100).toFixed(0) : 0;
+// ----------------------------------------------------
+// PIE CHART STATUS DATA
+// Per-status breakdown for a pie chart. `where` must already include
+// any caller-side filtering. `code` is string | number so this serves
+// both numeric (lotStatuses) and text-based (isfStatuses) status lists.
+// ----------------------------------------------------
 
-      return { category: cp, value };
+type PieChartStatusDataArgs = {
+  where?: string;
+  layer: any;
+  statusList: { code: string | number; label: string; color: string }[];
+  statusField: string;
+  statisticField: string;
+  statisticType: StatisticType;
+};
+
+export async function pieChartStatusData({
+  where,
+  layer,
+  statusList,
+  statusField,
+  statisticField,
+  statisticType,
+}: PieChartStatusDataArgs) {
+  const statusQuery = createQuery(where);
+  statusQuery.outFields = [statusField];
+  statusQuery.outStatistics = [
+    new StatisticDefinition({
+      onStatisticField: statisticField,
+      outStatisticFieldName: "total_status",
+      statisticType,
     }),
-  );
-}
+  ];
+  statusQuery.groupByFieldsForStatistics = [statusField];
+  statusQuery.orderByFields = [statusField];
 
-//--------------------------------------------//
-//  Change symbology of lot layer             //
-//--------------------------------------------//
-export function updateLotSymbology(new_date_field: any) {
-  try {
-    const lotLayerRenderer = new UniqueValueRenderer({
-      field: new_date_field,
-      defaultSymbol: lot_symbol,
-      uniqueValueInfos: lot_uniqueV,
-    });
-    lotLayer.renderer = lotLayerRenderer;
-  } catch (error) {
-    console.error("Error fetching data from FeatureServer:", error);
-  }
-}
+  const statusResponse = await layer.queryFeatures(statusQuery);
 
-//---------------------------------------------------------//
-//                Get & Sort date fields                   //
-//---------------------------------------------------------//
-function parseDateField(field: string): Date {
-  return new Date(
-    Number(field.slice(1, 5)),
-    Number(field.slice(5, 7)) - 1,
-    Number(field.slice(7, 9)),
-  );
-}
+  // Attaches each status's color from statusList, so the chart can bind
+  // slice fill + click handling directly
+  return statusList.map(
+    ({
+      code,
+      label,
+      color,
+    }): { category: string; value: number; color: string; code: string | number } => {
+      const feature = statusResponse.features.find(
+        (f: any) => f.attributes[statusField] === code,
+      );
 
-export async function getSortDates(layer: any) {
-  //--- Get raw date fields (x202402013,.....)
-  const xdates = (layer?.fields ?? [])
-    .map((field: any) => field.name)
-    .filter((name: string) => name.startsWith("x2"))
-    .sort(
-      (a: string, b: string) =>
-        parseDateField(a).getTime() - parseDateField(b).getTime(),
-    );
-  return xdates;
-}
-
-export function toDateList(xdates: any) {
-  //--- Conver xdates to a list of dates in date format
-  const dateList: Date[] =
-    xdates.map((date: string) => {
-      return parseDateField(date);
-    }) ?? [];
-
-  return dateList;
-}
-
-//---------------------------------------------------------//
-//                Get as-of-date                           //
-//---------------------------------------------------------//
-export function yearMonthDay(date: Date) {
-  return {
-    year: date?.getFullYear() ?? 0,
-    month: date?.getMonth() + 1,
-    day: date?.getDate(),
-  };
-}
-
-export function toAsofdate(date: Date) {
-  //--- Return displayed date: (as of date)
-  const { year, day } = yearMonthDay(date);
-  const cmonth = date?.toLocaleString("en-US", { month: "long" });
-  return `${cmonth} ${day}, ${year}`;
-}
-
-export async function dateUpdate(category: string) {
-  //--- Only executed during an initial render
-  const query = new Query({
-    where: `category = '${category}'`,
-    outFields: ["category", "date"],
-  });
-
-  const { features } = await dateTable.queryFeatures(query);
-  return features.map(({ attributes }: any) => {
-    const asofdate = toAsofdate(new Date(attributes.date));
-
-    return asofdate;
-  });
-}
-
-//--- UseQuery to get a list of time-slider dates & latest date
-export function useDateFields(lotLayer: any) {
-  return useQuery<DateFieldsType>({
-    queryKey: [datefieldKeys.selected, lotLayer],
-    queryFn: async () => {
-      const response = await getSortDates(lotLayer);
       return {
-        dateFields: response,
-        latestdate: parseDateField(response.at(-1)),
+        category: label,
+        value: feature?.attributes.total_status ?? 0,
+        color,
+        code,
       };
     },
-    staleTime: Infinity,
-  });
-}
-
-//----------------------------------------------//
-//                 Others                       //
-//----------------------------------------------//
-export function thousands_separators(num: any) {
-  if (num) {
-    const num_parts = num.toString().split(".");
-    num_parts[0] = num_parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return num_parts.join(".");
-  } else {
-    return 0;
-  }
-}
-
-//--- Zoom to Layer
-// const arcgisScene = document.querySelector("arcgis-scene") as ArcgisScene;
-export function zoomToLayer(layer: any, view: any) {
-  return layer.queryExtent().then((response: any) => {
-    view?.goTo(response.extent, { speedFactor: 2 }).catch((error: any) => {
-      if (error.name !== "AbortError") {
-        console.error(error);
-      }
-    });
-  });
-}
-
-//--- Zoom to fullExtet
-export function zoomToFullExtent(layer: any, view: any) {
-  layer.fullExtent &&
-    view?.goTo(layer.fullExtent).catch((error: any) => {
-      if (error.name !== "AbortError") {
-        console.error(error);
-      }
-    });
-}
-
-//--- Highlight lot
-let highlight: any;
-export async function highlightLot(layer: any, view: any) {
-  const query = layer.createQuery();
-
-  const [layerView, results] = await Promise.all([
-    view?.whenLayerView(layer),
-    layer?.queryObjectIds(query),
-  ]);
-
-  highlight?.remove();
-  highlight = layerView.highlight(results);
+  );
 }
