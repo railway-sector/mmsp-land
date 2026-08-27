@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useMyContext, type SelectedLocation } from "../contexts/MyContext";
 import { useActiveDateFields } from "../contexts/TimeSliderContext";
 import { fieldStatistic, pieChartStatusData } from "../Query";
@@ -27,7 +27,8 @@ type ChartDatum = { category: string; value: number; color: string; code: number
 // LOCAL HOOK: data fetching
 // statusField/handedOverField/notYetField come from TimeSliderContext —
 // a date's NVS/JV/NY fields while the slider is on, or the defaults
-// while it's off.
+// while it's off. keepPreviousData means `data` stays populated across
+// filter changes instead of resetting to undefined mid-fetch.
 // ----------------------------------------------------
 function useLotData(
   { packageName, type, station }: SelectedLocation,
@@ -102,6 +103,7 @@ function useLotData(
         chartData,
       };
     },
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -165,7 +167,7 @@ function usePieChart(
         legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
         radius: am5.percent(45),
         innerRadius: am5.percent(28),
-        scale: 1.8,
+        scale: 2,
       }),
     );
     pieSeriesRef.current = pieSeries;
@@ -197,7 +199,7 @@ function usePieChart(
     pieSeries.ticks.template.setAll({ visible: false, scale: 0 });
 
     const legend = chart.children.push(
-      am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50), scale: 0.9 }),
+      am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50), scale: 0.9, height: 170 }),
     );
     legendRef.current = legend;
 
@@ -228,7 +230,7 @@ function usePieChart(
   useEffect(() => {
     pieSeriesRef.current?.data?.setAll(chartData);
     legendRef.current?.data?.setAll(pieSeriesRef.current?.dataItems);
-    pieSeriesRef.current?.appear(0, 200);
+    //pieSeriesRef.current?.appear(0, 1);
   }, [chartData]);
 
   // Recolors the legend's labels whenever the background toggle
@@ -278,13 +280,18 @@ export default function LotChart() {
     updateStatus(code === null ? null : { source: "lot", code });
   };
 
-  const { data, isLoading, isError } = useLotData(
+  const { data, isError } = useLotData(
     selectedLocation,
     activeStatusField,
     activeHandedOverField,
     activeNotYetField,
   );
   const chartData = data?.chartData ?? [];
+
+  // With keepPreviousData, data only stays undefined until the very
+  // first fetch resolves — after that it's always populated, so this
+  // flips false -> true once and never again.
+  const hasData = !!data;
 
   usePieChart(chartData, lotSelectedCode, handleSliceClick, textColor);
 
@@ -350,9 +357,9 @@ export default function LotChart() {
   // Percentage of total lots, guarded against divide-by-zero when
   // totalNumber is 0 (e.g. no lots match the current filter yet).
   const handedOverPercentage =
-    totalNumber > 0 ? Math.round((handedOverNumber / totalNumber) * 100) : 0;
+    totalNumber > 0 ? Number(((handedOverNumber / totalNumber) * 100).toFixed(1)) : 0;
   const toBeHandedOverPercentage =
-    totalNumber > 0 ? Math.round((toBeHandedOverNumber / totalNumber) * 100) : 0;
+    totalNumber > 0 ? Number(((toBeHandedOverNumber / totalNumber) * 100).toFixed(1)) : 0;
 
   if (isError) {
     return (
@@ -365,7 +372,7 @@ export default function LotChart() {
   return (
     <div
       style={{
-        minHeight: "100%",
+        minHeight: "98%",
         display: "flex",
         flexDirection: "column",
         paddingTop: "12px",
@@ -376,20 +383,20 @@ export default function LotChart() {
       <div style={{ flexShrink: 0, display: "flex", gap: "24px", justifyContent: "center", width: "100%", color: textColor }}>
         <div style={{ minWidth: "110px" }}>
           <div style={{ fontSize: "12px", opacity: 0.7, textAlign: "center" }}>TOTAL LOTS</div>
-          <div style={{ height: "30px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            {isLoading ? "" : totalNumber.toLocaleString()}
+          <div style={{ height: "12px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+            {hasData ? totalNumber.toLocaleString() : ""}
           </div>
         </div>
         <div style={{ minWidth: "110px" }}>
           <div style={{ fontSize: "12px", opacity: 0.7, textAlign: "center" }}>PUBLIC LOTS</div>
-          <div style={{ height: "30px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            {isLoading ? "" : publicNumber.toLocaleString()}
+          <div style={{ height: "12px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+            {hasData ? publicNumber.toLocaleString() : ""}
           </div>
         </div>
         <div style={{ minWidth: "110px" }}>
           <div style={{ fontSize: "12px", opacity: 0.7, textAlign: "center" }}>PRIVATE LOTS</div>
-          <div style={{ height: "30px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            {isLoading ? "" : privateNumber.toLocaleString()}
+          <div style={{ height: "12px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+            {hasData ? privateNumber.toLocaleString() : ""}
           </div>
         </div>
       </div>
@@ -398,28 +405,26 @@ export default function LotChart() {
         id={CHART_ID}
         style={{
           position: "relative", 
-          flex: "0.9 0.9 auto",
+          flex: "1 1 auto",
           minHeight: "200px",
           overflow: "hidden",
           backgroundColor: "rgba(0,0,0,0)",
           color: textColor,
-          marginBottom: "7px",
-          opacity: isLoading ? 0 : 1,
-          transition: "opacity 0.2s",
+          marginBottom: "15px",
         }}
       ></div>
 
-      <div style={{ position: "relative", flexShrink: 0, display: "flex", gap: "24px", justifyContent: "center", width: "100%", color: textColor, paddingBottom: "5px" }}>
+      <div style={{ position: "relative", flexShrink: 0, display: "flex", gap: "24px", justifyContent: "center", width: "100%", color: textColor, paddingTop: "5px" }}>
         <div style={{ minWidth: "170px" }}>
           <div style={{ fontSize: "12px", opacity: 0.7, textAlign: "center" }}>HANDED OVER LOTS</div>
           <div style={{ height: "34px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            {isLoading ? "" : `${handedOverPercentage}% (${handedOverNumber.toLocaleString()})`}
+            {hasData ? `${handedOverPercentage}% (${handedOverNumber.toLocaleString()})` : ""}
           </div>
         </div>
         <div style={{ minWidth: "170px" }}>
           <div style={{ fontSize: "12px", opacity: 0.7, textAlign: "center" }}>TO BE HANDED OVER LOTS</div>
           <div style={{ height: "34px", fontSize: "28px", fontWeight: 600, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-            {isLoading ? "" : `${toBeHandedOverPercentage}% (${toBeHandedOverNumber.toLocaleString()})`}
+            {hasData ? `${toBeHandedOverPercentage}% (${toBeHandedOverNumber.toLocaleString()})` : ""}
           </div>
         </div>
       </div>
