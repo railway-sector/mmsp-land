@@ -30,14 +30,14 @@ export const demolishedStructureStatusField = "REMARKS";
 // ============================================================
 
 export const lotStatuses = [
-  { code: 1, label: "Paid",                        color: "#00734d" },
-  { code: 2, label: "For Payment Processing",      color: "#0070ff" },
-  { code: 3, label: "For Legal Pass",              color: "#ffff00" },
-  { code: 4, label: "For Appraisal/Offer to Buy",  color: "#ffaa00" },
+  { code: 1, label: "Paid",                        color: "#70AD47" },
+  { code: 2, label: "For Payment Processing",      color: "#0070FF" },
+  { code: 3, label: "For Legal Pass",              color: "#FFFF00" },
+  { code: 4, label: "For Appraisal/Offer to Buy",  color: "#FFAA00" },
   { code: 5, label: "For Expro",                   color: "#FF0000" },
-  { code: 6, label: "with WOP Fully Turned-over",  color: "#4e6b2f" },
-  { code: 7, label: "ROWUA/TUA",                   color: "#70AD47" },
-  { code: 8, label: "Signed ROWUA/TUA",            color: "#adc993" },
+  { code: 6, label: "with WOP Fully Turned-over",  color: "#00734C" },
+  { code: 7, label: "ROWUA/TUA",                   color: "#55FF00" },
+  { code: 8, label: "Signed ROWUA/TUA",            color: "#B2CFB2" },
 ];
 
 // code must match RELOCATION's stored text exactly.
