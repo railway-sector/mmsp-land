@@ -238,6 +238,7 @@ const lotPopupTemplate = new PopupTemplate({
     {
       type: "fields",
       fieldInfos: [
+        { fieldName: "OWNER", label: "Land Owner" },
         { fieldName: "StatusNVS3", label: "Status" },
         { fieldName: "Package", label: "Package" },
         { fieldName: "Type", label: "Type" },
@@ -308,7 +309,7 @@ export const lotLayer = new FeatureLayer({
   },
   outFields: ["StatusNVS3", "HandedOVer", "not_yet", "Package", "Type", "Station1", "OBJECTID", "OWNER", "Id", "Issue", "CN"],
   layerId: 31,
-  title: "MMSP Land",
+  title: "Acquisition Status",
   renderer: lotLayerRenderer,
   popupTemplate: lotPopupTemplate,
   labelingInfo: [lotCnLabelClass],
@@ -662,7 +663,7 @@ export const ortigasStationGroupLayer = new GroupLayer({
 
 // ============================================================
 // LAYERS — East Valenzuela Station
-// (8th added in MapDisplay: eastValenzualaStationGroupLayer)
+// (8th added in MapDisplay: eastValenzuelaStationGroupLayer)
 // ============================================================
 
 export const creekDiversionLayer = new FeatureLayer({
@@ -681,14 +682,14 @@ export const creekDiversionLayer = new FeatureLayer({
   maxScale: 0,
 });
 
-export const eastValenzualaStationLayer = new FeatureLayer({
+export const eastValenzuelaStationLayer = new FeatureLayer({
   portalItem: {
     id: "0c172b82ddab44f2bb439542dd75e8ae",
     portal: { url: "https://gis.railway-sector.com/portal" },
   },
   outFields: [],
   layerId: 1,
-  title: "East Valenzuala Station",
+  title: "East Valenzuela Station",
   opacity: 1,
   popupEnabled: false,
   listMode: "show",
@@ -697,10 +698,10 @@ export const eastValenzualaStationLayer = new FeatureLayer({
   maxScale: 0,
 });
 
-export const eastValenzualaStationGroupLayer = new GroupLayer({
-  title: "East Valenzuala Station",
+export const eastValenzuelaStationGroupLayer = new GroupLayer({
+  title: "East Valenzuela Station",
   visibilityMode: "independent",
-  layers: [creekDiversionLayer, eastValenzualaStationLayer],
+  layers: [creekDiversionLayer, eastValenzuelaStationLayer],
   visible: true,
   listMode: "show",
 });
