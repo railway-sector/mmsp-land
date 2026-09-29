@@ -750,7 +750,7 @@ export const stationLayer = new FeatureLayer({
 // on the portal item — the item itself is the table.
 // ============================================================
 
-export const landAcquisitionDateTable = new FeatureLayer({
+export const DateTable = new FeatureLayer({
   portalItem: {
     id: "a084d9cae5234d93b7aa50f7eb782aec",
     portal: { url: "https://gis.railway-sector.com/portal" },

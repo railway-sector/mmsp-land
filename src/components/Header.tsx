@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Dropdown from "./Dropdown";
-import { landAcquisitionDateTable } from "../layers";
+import { DateTable } from "../layers";
 
 // Formats a Date, e.g. "July 8, 2026"
 function formatDate(date: Date) {
@@ -48,9 +48,9 @@ export default function Header() {
 
     async function loadDate() {
       try {
-        await landAcquisitionDateTable.load();
+        await DateTable.load();
 
-        const result = await landAcquisitionDateTable.queryFeatures({
+        const result = await DateTable.queryFeatures({
           where: "category = 'Land Acquisition'",
           outFields: ["date"],
           num: 1,
