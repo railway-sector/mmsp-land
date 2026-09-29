@@ -50,11 +50,11 @@ export const isfStatuses = [
 // First 5 match lotStatuses so charts look the same across layers.
 // Quit Claim (6) only applies to structures.
 export const structureStatuses = [
-  { code: 1, label: "Paid",                        color: "#00734d" },
-  { code: 2, label: "For Payment Processing",      color: "#0070ff" },
-  { code: 3, label: "For Legal Pass",              color: "#ffff00" },
-  { code: 4, label: "For Appraisal/Offer to Buy",  color: "#ffaa00" },
-  { code: 5, label: "For Expro",                   color: "#FF0000" },
+  { code: 1, label: "Paid",                        color: "#47702E" },
+  { code: 2, label: "For Payment Processing",      color: "#0049A6" },
+  { code: 3, label: "For Legal Pass",              color: "#A6A600" },
+  { code: 4, label: "For Appraisal/Offer to Buy",  color: "#A66E00" },
+  { code: 5, label: "For Expro",                   color: "#A60000" },
   { code: 6, label: "Quit Claim",                  color: "#1b998b" },
 ];
 
@@ -400,7 +400,7 @@ export const existingStructureLayer = new FeatureLayer({
   opacity: 1,
   popupEnabled: true,
   listMode: "show",
-  visible: true,
+  visible: false,
 });
 
 // Same source layer (9) as existingStructureLayer above, just colored
@@ -419,14 +419,14 @@ export const demolishedStructureLayer = new FeatureLayer({
   opacity: 1,
   popupEnabled: true,
   listMode: "show",
-  visible: true,
+  visible: false,
 });
 
 export const structuresGroupLayer = new GroupLayer({
   title: "Structures",
   visibilityMode: "independent",
   layers: [existingStructureLayer, demolishedStructureLayer],
-  visible: false,
+  visible: true,
   listMode: "show",
 });
 

@@ -12,6 +12,7 @@ import StructureChart from "./StructureChart.tsx";
 import ISFChart from "./ISFChart";
 import ExpropriationList from "./Expro";
 import IssueList from "./Issue";
+import { existingStructureLayer, isfLayer } from "../layers";
 
 // calcite-tab adds its own top/bottom padding around whatever's
 // slotted into it (via --calcite-tab-content-block-padding, driven by
@@ -29,14 +30,20 @@ export default function SidePanel() {
   // immediately and just hides inactive ones via CSS — building an
   // amCharts chart while its container is display:none gives it zero
   // size, permanently. Rendering a tab's content only after its first
-  // visit avoids that. "land" starts visited since it's the default tab.
+  // visit avoids that. "land", "structure" and "isf" start visited
+  // since their charts/layers should be ready right away.
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(
-    new Set(["land"]),
+    new Set(["land", "structure", "isf"]),
   );
 
   const handleTabChange = (e: CustomEvent) => {
     const newTab = (e.target as any).selectedTitle?.className;
     if (!newTab) return;
+
+    // Turn on the matching layer when its tab is selected
+    if (newTab === "structure") existingStructureLayer.visible = true;
+    else if (newTab === "isf") isfLayer.visible = true;
+
     setVisitedTabs((prev) => new Set(prev).add(newTab));
   };
 
