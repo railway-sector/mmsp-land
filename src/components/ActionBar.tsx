@@ -6,6 +6,8 @@ import "@arcgis/map-components/components/arcgis-basemap-gallery";
 import "@arcgis/map-components/components/arcgis-layer-list";
 import { useEffect, useRef, useState } from "react";
 import { useTimeSliderToggle } from "../contexts/TimeSliderContext";
+import ScreenshotButton from "./ScreenshotButton";
+import PrintMapButton from "./PrintMapButton";
 
 // ----------------------------------------------------
 // TYPES
@@ -114,6 +116,10 @@ export default function ActionBar() {
           active={showTimeSlider}
           onClick={toggleTimeSlider}
         ></calcite-action>
+
+        <ScreenshotButton />
+
+        <PrintMapButton />
 
         <calcite-action
           icon="information"
