@@ -1,1 +1,0 @@
-import{cw as s,cx as h,cy as m,cz as e,cA as u}from"./index-D5Lnaqki.js";import{t as f}from"./densificationConstants-P_weZj5j.js";function x(t,n,i,o){const{height:c,width:r}=o??p(t),a=Math.min(r/n,c/i)*f();return s(t,{maxDeviation:a})}function p(t){const n=h(m(),t);return{width:u(n),height:e(n)}}export{x as n};
