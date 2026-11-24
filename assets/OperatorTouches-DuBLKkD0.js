@@ -1,0 +1,1 @@
+import{W as p,R as s}from"./ProjectionTransformation-DLwNj3Ci.js";import"./index-Dmtgfku4.js";import"./Envelope2D-CcxT5Gya.js";import"./MultiPathImpl-Bnx04OZ_.js";class c extends p{getOperatorType(){return 5}execute(r,e,t,o){return s(r,e,t,8,o)}}export{c as OperatorTouches};

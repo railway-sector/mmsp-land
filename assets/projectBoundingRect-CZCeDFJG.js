@@ -1,0 +1,1 @@
+import{az as f,iC as l,d9 as u,bt as m}from"./index-Dmtgfku4.js";function e(t,n,r,s){return t==null?!1:f(n,s)?(l(r,t),!0):(a[0]=t[0],a[1]=t[1],a[2]=0,!u(a,n,0,a,s,0)||(r[0]=a[0],r[1]=a[1],a[0]=t[2],a[1]=t[3],a[2]=0,!u(a,n,0,a,s,0))?!1:(r[2]=a[0],r[3]=a[1],!0))}const a=m();export{e as i};

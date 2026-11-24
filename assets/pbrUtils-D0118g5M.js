@@ -1,0 +1,1 @@
+import{bd as i,ei as e,ej as a}from"./index-Dmtgfku4.js";function m({normalTexture:n,metallicRoughnessTexture:o,metallicFactor:l,roughnessFactor:u,emissiveTexture:t,emissiveFactor:r,occlusionTexture:s}){return n==null&&o==null&&t==null&&(r==null||i(r,a))&&s==null&&(u==null||u===1)&&(l==null||l===1)}const x=e(1,1,.5),T=e(0,.6,.2),F=e(0,1,.2);export{T as a,x as i,F as o,m as r};

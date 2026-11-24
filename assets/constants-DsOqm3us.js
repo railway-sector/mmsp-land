@@ -1,0 +1,1 @@
+import{cp as i}from"./index-Dmtgfku4.js";const e=15.5,o=4,r=64,l=1024,n={outlineWidth:.75,referenceWidth:.75,cap:i.CIMSolidStroke.capstyle,join:i.CIMSolidStroke.joinstyle,miterLimit:i.CIMSolidStroke.miterlimit};export{n as a,l as i,o as n,r,e as t};

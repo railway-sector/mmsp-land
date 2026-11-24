@@ -1,0 +1,1 @@
+import{X as i,a1 as h,dU as o,a5 as d,a7 as l}from"./index-Dmtgfku4.js";const n=s=>{let r=s,e=class extends r{initialize(){this.addHandles(o(()=>this.layer,"refresh",t=>{this.doRefresh(t.dataChanged).catch(a=>{d(a)||l.getLogger(this).error(a)})}),"RefreshableLayerView")}};return e=i([h("esri.views.layers.RefreshableLayerView")],e),e};export{n as a};

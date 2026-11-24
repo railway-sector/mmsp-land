@@ -1,0 +1,1 @@
+import{bb as o}from"./index-Dmtgfku4.js";function p(i){i?.writtenProperties&&i.writtenProperties.forEach(({target:r,propName:t,newOrigin:e})=>{o(r)&&e&&r.originOf(t)!==e&&r.updateOrigin(t,e)})}export{p as t};

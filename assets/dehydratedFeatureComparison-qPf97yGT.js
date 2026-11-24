@@ -1,0 +1,1 @@
+import{az as u,eW as t}from"./index-Dmtgfku4.js";function m(e,a){return e===a||e!=null&&a!=null&&u(e.spatialReference,a.spatialReference)&&e.x===a.x&&e.y===a.y&&e.z===a.z&&e.m===a.m}function c(e,a,l){return e===a||e!=null&&a!=null&&u(e.spatialReference,a.spatialReference)&&t(e.x,a.x,l)&&t(e.y,a.y,l)&&t(e.z??0,a.z??0,l)&&t(e.m??0,a.m??0,l)}export{c as a,m as i};

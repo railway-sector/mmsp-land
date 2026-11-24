@@ -1,0 +1,1 @@
+import{gz as o,gA as s,gB as c,dl as g}from"./index-Dmtgfku4.js";function f({level:e,class:n,...l},t){let a=r(e),i=`h${a}`;return o(i,{...l,"aria-level":String(a),class:s(c.heading,n),role:"heading"},t)}function r(e){return g(Math.ceil(e),1,6)}function h(e,n=1){return r(e+n)}export{f as i,h as o};

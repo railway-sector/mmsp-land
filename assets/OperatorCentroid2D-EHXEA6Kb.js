@@ -1,0 +1,1 @@
+import{i as t}from"./Centroid-CA-TwbbN-sjwHe3Dr.js";import"./Envelope2D-CcxT5Gya.js";class p{getOperatorType(){return 10205}accelerateGeometry(e,r,o){return!1}canAccelerateGeometry(e){return!1}supportsCurves(){return!0}execute(e,r){return t(e)}}export{p as OperatorCentroid2D};

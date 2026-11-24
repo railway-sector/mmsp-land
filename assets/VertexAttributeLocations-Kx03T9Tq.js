@@ -1,0 +1,1 @@
+import{el as u}from"./index-Dmtgfku4.js";function m(r){let n=0;return u(new Map(r.map(({name:t,count:e})=>{let a=[t,n];return e===16?n+=4:e===9?n+=3:++n,a})))}function c(r){let n=new Map,t=0;return r.forEach(e=>e.forEach(({name:a,count:o})=>{n.set(a,t),o===16?t+=4:o===9?t+=3:++t})),n}function l(r){return c(Array.from(r.values()).map(({layout:n})=>n))}export{c as n,l as r,m as t};

@@ -1,0 +1,1 @@
+import{a6 as n}from"./index-Dmtgfku4.js";let t,a=!1,o;function i(){return t??=n("arcadeGeometryOperatorsWorker").then(r=>{o=r,a=!0,t=void 0})}async function p(r,e){return a?o.apply("invokeGeometryOp",[r,e]):(await i(),p(r,e))}export{p as a};

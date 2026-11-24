@@ -1,0 +1,1 @@
+import{N as r}from"./OutputColorHighlightOLID.glsl-B05J6Odi.js";class s{constructor(t){this.layout=t}elementCount(t){return t.get("position").indices.length}write(t,e,n,o){o!=null&&r(n,this.layout,t,e,o)}}export{s as t};

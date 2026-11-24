@@ -1,0 +1,1 @@
+import{e$ as r,X as t,Y as s,aS as a,a1 as p}from"./index-Dmtgfku4.js";let o=class extends r{constructor(e){super(e),this.sourcePoint=null,this.mapPoint=null}};t([s()],o.prototype,"sourcePoint",void 0),t([s({type:a})],o.prototype,"mapPoint",void 0),o=t([p("esri.layers.support.ControlPoint")],o);export{o as a};

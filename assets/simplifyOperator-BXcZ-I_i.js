@@ -1,0 +1,1 @@
+import{isSimpleAsFeature as s,execute as f,supportsCurves as m}from"./operatorSimplify-D5R8-3bS.js";import{fromSpatialReference as t,getSpatialReference as a,fromGeometry as o,toGeometry as p}from"./apiConverter-D9uYzsrJ.js";import"./index-Dmtgfku4.js";function l(e){let r=a(e);return p(f(o(e),t(r),!1),r)}function c(e){return s(o(e),t(a(e)),!1)}m();export{l,c as p};

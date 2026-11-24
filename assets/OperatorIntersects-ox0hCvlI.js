@@ -1,0 +1,1 @@
+import{W as p,R as s}from"./ProjectionTransformation-DLwNj3Ci.js";import"./index-Dmtgfku4.js";import"./Envelope2D-CcxT5Gya.js";import"./MultiPathImpl-Bnx04OZ_.js";class u extends p{getOperatorType(){return 4}execute(r,e,t,o){return!s(r,e,t,4,o)}}export{u as OperatorIntersects};

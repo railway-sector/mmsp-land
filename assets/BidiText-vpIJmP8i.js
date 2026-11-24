@@ -1,0 +1,1 @@
+import{S as o}from"./BidiEngine-Dhh_oT9O.js";const r=new o;function u(t,N=!0){if(!r.hasBidiChar(t))return[t,!1,{...r}];let e=r.checkContextual(t),n;n=e==="rtl"?"IDNNN":"ICNNN";let i=N?"VLYSN":"VLYNN";return[r.bidiTransform(t,n,i),!0,{...r}]}export{u as n};

@@ -1,0 +1,1 @@
+import{k as a,hh as l}from"./index-Dmtgfku4.js";function u(t){let e="metric";if(!t)return e;let{map:r}=t,i=(r&&"portalItem"in r?r.portalItem?.portal:null)??a.getDefault();switch(i.user?.units??i.units){case e:return e;case"english":return"imperial"}return l(t.spatialReference)??e}export{u as n};
